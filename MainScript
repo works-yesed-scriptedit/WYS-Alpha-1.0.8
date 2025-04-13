@@ -843,4 +843,6 @@ ChatTab:AddToggle({
 	end
 })
 
+ChatTab:AddLabel("Label")
+
 OrionLib:Init()
