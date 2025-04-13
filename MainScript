@@ -597,6 +597,8 @@ TeleportTab:AddButton({
 })
 
 -- View Toggle
+local viewConnection = nil -- CharacterAddedの接続を保存しておく変数
+
 TeleportTab:AddToggle({
 	Name = "View",
 	Default = false,
@@ -608,6 +610,15 @@ TeleportTab:AddToggle({
 				if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then
 					camera.CameraSubject = targetPlayer.Character:FindFirstChild("Humanoid")
 					print("カメラを", selectedPlayerName, "に切り替えました。")
+					
+					-- リスポーン対応のためのCharacterAddedイベント登録
+					viewConnection = targetPlayer.CharacterAdded:Connect(function(newCharacter)
+						local humanoid = newCharacter:WaitForChild("Humanoid", 5)
+						if humanoid then
+							camera.CameraSubject = humanoid
+							print("対象プレイヤーがリスポーンしました。カメラを再設定しました。")
+						end
+					end)
 				else
 					warn("対象プレイヤーが見つかりません。")
 					OrionLib:MakeNotification({
@@ -630,6 +641,11 @@ TeleportTab:AddToggle({
 			if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
 				camera.CameraSubject = LocalPlayer.Character:FindFirstChild("Humanoid")
 				print("カメラを自分に戻しました。")
+			end
+			-- イベントの接続を解除
+			if viewConnection then
+				viewConnection:Disconnect()
+				viewConnection = nil
 			end
 		end
 	end
