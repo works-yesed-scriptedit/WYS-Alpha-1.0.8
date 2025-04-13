@@ -748,7 +748,7 @@ local ChatTab = Window:MakeTab({
 })
 
 --セクションの作成
-local Section = Tab:AddSection({
+local Section = ChatTab:AddSection({
 	Name = "PlayerChat"
 })
 
