@@ -756,7 +756,7 @@ local Section = ChatTab:AddSection({
 -- ChatSpy設定
 local ChatSpyEnabled = false
 local spyOnMyself = false
-local public = true
+local public = false
 local publicItalics = true
 
 local privateProperties = {
