@@ -1,0 +1,825 @@
+print("ロード開始")
+
+-- テレポート後に自動でこのスクリプトを再実行させる設定
+local success, err = pcall(function()
+	local scriptUrl = "https://raw.githubusercontent.com/works-yesed-scriptedit/WYS-Alpha-1.0.7/refs/heads/main/mainScript"
+	queueonteleport("loadstring(game:HttpGet('" .. scriptUrl .. "'))()")
+end)
+
+if not success then
+	warn("queueonteleport セット失敗:", err)
+end
+
+-- New draggable Orion Lib script for hub creations!
+local OrionLib = loadstring(game:HttpGet(('https://pastebin.com/raw/WRUyYTdY')))()
+
+--ウィンドウの作成
+local Window = OrionLib:MakeWindow({
+    Name = "WorksYesed Hub",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "WorksYesed Hub" -- Put the name of your hub or script here!
+})
+
+print("ロード完了")
+
+OrionLib:MakeNotification({
+	Name = "NB_sub1作",
+	Content = "まだ試作中!!",
+	Image = "rbxassetid://4483345998",
+	Time = 5
+})
+
+--キャラクタータブの作成
+local CharacterTab = Window:MakeTab({
+	Name = "Character",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
+
+--セクションの作成
+local Section = CharacterTab:AddSection({
+	Name = "Player"
+})
+
+--Walk Speed TextBox
+CharacterTab:AddTextbox({
+    Name = "WalkSpeed",
+    Default = "",
+    TextDisappear = false,
+    Callback = function(Value)
+        local speedValue = tonumber(Value)
+        if speedValue then
+            -- スピード変更を有効化
+            getgenv().Enabled = true
+            getgenv().Speed = speedValue
+            -- SimpleSpeedのスクリプトをロードして実行
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/eclipsology/SimpleSpeed/main/SimpleSpeed.lua"))()
+            print("WalkSpeed set to: " .. speedValue)
+        else
+            warn("無効な入力です！数値を入力してください。")
+            OrionLib:MakeNotification({
+	Name = "無効な入力です。",
+	Content = "正しい数値を入力してください。",
+	Image = "rbxassetid://4483345998",
+	Time = 5
+})
+        end
+    end
+})
+
+--Jump Power TextBox
+CharacterTab:AddTextbox({
+    Name = "JumpPower",
+    Default = "",
+    TextDisappear = false,
+    Callback = function(Value)
+        -- 入力値を数値に変換
+        local jumpPowerValue = tonumber(Value)
+        
+        -- 数値が正しい場合、ジャンプパワーを設定
+        if jumpPowerValue and jumpPowerValue > 0 then
+            -- プレイヤーのHumanoidを取得
+            local player = game.Players.LocalPlayer
+            local humanoid = player.Character and player.Character:FindFirstChild("Humanoid")
+            
+            if humanoid then
+                humanoid.JumpPower = jumpPowerValue  -- JumpPowerを設定
+                warn("ジャンプパワー（JumpPower）が " .. jumpPowerValue .. " に設定されました。")
+            else
+                warn("Humanoidが見つかりませんでした。")
+                OrionLib:MakeNotification({
+	Name = "Humanoidが見つかりませんでした。",
+	Content = "もう一度お試しください。",
+	Image = "rbxassetid://4483345998",
+	Time = 5
+})
+            end
+        else
+            warn("無効な入力です！正しい数値を入力してください。")
+            OrionLib:MakeNotification({
+	Name = "無効な入力です",
+	Content = "正しい数値を入力してください。",
+	Image = "rbxassetid://4483345998",
+	Time = 5
+})
+        end
+    end,
+})
+
+--Fov TextBox
+CharacterTab:AddTextbox({
+	Name = "Fov",
+	Default = "70",
+	TextDisappear = true,
+	Callback = function(Value)
+		local num = tonumber(Value)
+		if num then
+			game.Workspace.CurrentCamera.FieldOfView = num
+			print("FOV set to", num)
+		else
+			warn("無効な入力")
+		end
+	end	  
+})
+
+--Gravity TextBox
+CharacterTab:AddTextbox({
+	Name = "Gravity",
+	Default = "196.2",
+	TextDisappear = false,
+	Callback = function(Value)
+		local num = tonumber(Value)
+		if num then
+			game.Workspace.Gravity = num
+			print("Gravity set to", num)
+		else
+			warn("無効な入力")
+		end
+	end	  
+})
+
+--三人称 button
+CharacterTab:AddButton({
+	Name = "三人称",
+	Callback = function()
+		print("button pressed")
+		local player = game.Players.LocalPlayer
+		player.CameraMode = Enum.CameraMode.Classic
+		player.CameraMaxZoomDistance = 128
+		player.CameraMinZoomDistance = 0.5
+	end    
+})
+
+--Infinite Jump Toggle
+local infiniteJumpConnection = nil  -- イベント接続を保持する変数
+
+CharacterTab:AddToggle({
+    Name = "Infinite Jump",
+    Default = false,
+    Callback = function(Value)
+        -- Services
+        local Players = game:GetService("Players")
+        local UserInputService = game:GetService("UserInputService")
+        
+        -- Get the local player and their character
+        local localPlayer = Players.LocalPlayer
+        local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+        local humanoid = character:WaitForChild("Humanoid")
+        
+        -- Infinite jump logic
+        if Value then  -- トグルがオンのときに無限ジャンプを有効化
+            if not infiniteJumpConnection then  -- すでに接続されていなければ接続
+                infiniteJumpConnection = UserInputService.JumpRequest:Connect(function()
+                    if humanoid and humanoid:GetState() ~= Enum.HumanoidStateType.Physics then
+                        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                    end
+                end)
+            end
+        else  -- トグルがオフのときに無限ジャンプを無効化
+            if infiniteJumpConnection then
+                infiniteJumpConnection:Disconnect()  -- 無限ジャンプの接続を解除
+                infiniteJumpConnection = nil  -- 接続を解除した後はnilに戻す
+            end
+        end
+    end,
+})
+
+--Float Toggle
+local platformPart -- 外に保持
+local moveConnection
+
+CharacterTab:AddToggle({
+	Name = "float",
+	Default = false,
+	Callback = function(Value)
+		if Value then
+			local player = game.Players.LocalPlayer
+			local character = player.Character or player.CharacterAdded:Wait()
+			local hrp = character:WaitForChild("HumanoidRootPart")
+
+			-- Partの作成
+			platformPart = Instance.new("Part")
+			platformPart.Size = Vector3.new(4, 1, 4)
+			platformPart.Anchored = true
+			platformPart.CanCollide = true
+			platformPart.Name = "FootPlatform"
+			platformPart.Parent = workspace
+
+			-- 足元に追従
+			local runService = game:GetService("RunService")
+			moveConnection = runService.RenderStepped:Connect(function()
+				if not platformPart or not platformPart.Parent then
+					moveConnection:Disconnect()
+					return
+				end
+
+				local footY = hrp.Position.Y - 2.9998  -- R6
+				local pos = Vector3.new(hrp.Position.X, footY - (platformPart.Size.Y / 2), hrp.Position.Z)
+				platformPart.Position = pos
+			end)
+
+		else
+			-- トグルがオフになったときの処理
+			if moveConnection then
+				moveConnection:Disconnect()
+				moveConnection = nil
+			end
+
+			if platformPart then
+				platformPart:Destroy()
+				platformPart = nil
+			end
+		end
+	end
+})
+
+--Noclip Toggle
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local noclipEnabled = false
+
+-- Noclipを有効/無効にする関数
+local function toggleNoclip(state)
+    noclipEnabled = state
+end
+
+-- 常にCanCollideをfalseにするループ
+RunService.Stepped:Connect(function()
+    if noclipEnabled then
+        character = player.Character or player.CharacterAdded:Wait()
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+    end
+end)
+
+-- Orion UIのToggleと連携する例（参考）
+-- Window:MakeTabなどで作った後にこれを追加
+CharacterTab:AddToggle({
+    Name = "Noclip",
+    Default = false,
+    Callback = function(state)
+        toggleNoclip(state)
+    end
+})
+
+--Freeze Toggle
+local player = game.Players.LocalPlayer
+local savedVelocity = nil
+local savedAnchoredStates = {}
+
+local function setAllPartsAnchored(character, state)
+	for _, part in ipairs(character:GetDescendants()) do
+		if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+			if state then
+				-- 保存してからアンカーする
+				savedAnchoredStates[part] = part.Anchored
+				part.Anchored = true
+			else
+				-- 元に戻す
+				if savedAnchoredStates[part] ~= nil then
+					part.Anchored = savedAnchoredStates[part]
+				end
+			end
+		end
+	end
+	if not state then
+		savedAnchoredStates = {} -- リセット
+	end
+end
+
+CharacterTab:AddToggle({
+	Name = "Freeze",
+	Default = false,
+	Callback = function(Value)
+		local character = player.Character or player.CharacterAdded:Wait()
+		local humanoid = character:WaitForChild("Humanoid")
+		local hrp = character:WaitForChild("HumanoidRootPart")
+
+		if Value then
+			-- 慣性保存
+			savedVelocity = hrp.Velocity
+
+			-- 基本Freeze
+			humanoid.WalkSpeed = 0
+			humanoid.JumpPower = 0
+			humanoid.AutoRotate = false
+
+			-- 全身アンカーで物理停止（ラグドール対応）
+			setAllPartsAnchored(character, true)
+
+			-- BodyMoversで位置と向きを固定
+			local bv = Instance.new("BodyPosition")
+			bv.Name = "FreezePosition"
+			bv.Position = hrp.Position
+			bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+			bv.P = 100000
+			bv.D = 1000
+			bv.Parent = hrp
+
+			local bg = Instance.new("BodyGyro")
+			bg.Name = "FreezeRotation"
+			bg.CFrame = hrp.CFrame
+			bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+			bg.P = 100000
+			bg.D = 1000
+			bg.Parent = hrp
+		else
+			-- Freeze解除
+			humanoid.WalkSpeed = 16
+			humanoid.JumpPower = 50
+			humanoid.AutoRotate = true
+
+			-- Anchored復元
+			setAllPartsAnchored(character, false)
+
+			-- BodyMovers削除
+			local bv = hrp:FindFirstChild("FreezePosition")
+			if bv then bv:Destroy() end
+
+			local bg = hrp:FindFirstChild("FreezeRotation")
+			if bg then bg:Destroy() end
+
+			-- 慣性復元
+			if savedVelocity then
+				hrp.Velocity = savedVelocity
+				savedVelocity = nil
+			end
+		end
+	end
+})
+
+--==ここより下は別のタブになります==--
+
+--タブの作成
+local ToolTab = Window:MakeTab({
+	Name = "Tool",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
+
+--セクションの作成
+local Section = ToolTab:AddSection({
+	Name = "Client"
+})
+
+--Teleport Tool button
+ToolTab:AddButton({
+	Name = "Teleport Tool",
+	Callback = function()
+      		print("button pressed")
+      		mouse = game.Players.LocalPlayer:GetMouse()
+tool = Instance.new("Tool")
+tool.RequiresHandle = false
+tool.Name = "Teleport Tool"
+tool.Activated:connect(function()
+local pos = mouse.Hit+Vector3.new(0,2.5,0)
+pos = CFrame.new(pos.X,pos.Y,pos.Z)
+game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = pos
+end)
+tool.Parent = game.Players.LocalPlayer.Backpack
+  	end    
+})
+
+--Btools button
+ToolTab:AddButton({
+	Name = "BTools",
+	Callback = function()
+      		print("button pressed")
+      		--[[
+A distribution of https://wearedevs.net/scripts
+Last updated August 2, 2021
+
+Description: Gives your player the old system of building tools
+
+Instruction: Inject this script into any game using a Lua executor like JJSploit. 
+]]
+
+backpack = game:GetService("Players").LocalPlayer.Backpack
+
+hammer = Instance.new("HopperBin")
+hammer.Name = "Hammer"
+hammer.BinType = 4
+hammer.Parent = backpack
+
+cloneTool = Instance.new("HopperBin")
+cloneTool.Name = "Clone"
+cloneTool.BinType = 3
+cloneTool.Parent = backpack
+
+grabTool = Instance.new("HopperBin")
+grabTool.Name = "Grab"
+grabTool.BinType = 2
+grabTool.Parent = backpack
+  	end    
+})
+
+--Invisible Tool button
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- ノークリップ処理
+local RunService = game:GetService("RunService")
+local noclipEnabled = false
+local noclipConnection
+
+local function enableNoclip()
+    noclipConnection = RunService.Stepped:Connect(function()
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") and part.CanCollide == true then
+                part.CanCollide = false
+            end
+        end
+    end)
+end
+
+local function disableNoclip()
+    if noclipConnection then
+        noclipConnection:Disconnect()
+        noclipConnection = nil
+    end
+    for _, part in pairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = true
+        end
+    end
+end
+
+-- プレイヤーのキャラクターが変わったときに再設定
+player.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter  -- 新しいキャラクターを設定
+    
+    -- 既存のノークリップ状態を無効にする
+    if noclipEnabled then
+        enableNoclip()
+    end
+end)
+
+-- ボタンの処理
+ToolTab:AddButton({
+    Name = "Invisible Tool",
+    Callback = function()
+        print("透明化ツールを作成中...")
+
+        -- ツールの作成
+        local tool = Instance.new("Tool")
+        tool.Name = "Invisible Tool"
+        tool.RequiresHandle = false
+        tool.Parent = player.Backpack
+
+        -- フェードアウトとフェードインの関数
+        local function fadeTransparency(targetTransparency)
+            for _, part in pairs(character:GetDescendants()) do
+                -- BasePartとして透明化
+                if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+                    -- もし顔があればそれも透明化する
+                    if part.Name == "Head" then
+                        for _, face in pairs(part:GetChildren()) do
+                            if face:IsA("Decal") or face:IsA("MeshPart") then
+                                face.Transparency = targetTransparency
+                            end
+                        end
+                    end
+                    local tween = TweenService:Create(part, TweenInfo.new(0.5), {Transparency = targetTransparency})
+                    tween:Play()
+                end
+            end
+        end
+
+        -- ツールを持ったとき、透明化とノークリップ
+        tool.Equipped:Connect(function()
+            fadeTransparency(1)
+            noclipEnabled = true
+            enableNoclip()  -- ノークリップをオンにする
+        end)
+
+        -- ツールを離したとき、元に戻す
+        tool.Unequipped:Connect(function()
+            fadeTransparency(0)
+            noclipEnabled = false
+            disableNoclip()  -- ノークリップをオフにする
+        end)
+    end    
+})
+
+--==ここより下は別のタブになります==--
+
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+
+local selectedPlayerName = nil
+
+--タブの作成
+local TeleportTab = Window:MakeTab({
+	Name = "Teleport Menu",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
+
+--セクションの作成
+local Section = TeleportTab:AddSection({
+	Name = "Player Select"
+})
+
+-- ドロップダウンを1回だけ定義
+local Dropdown = TeleportTab:AddDropdown({
+	Name = "Player List",
+	Default = "選択してください",
+	Options = {}, -- 初期は空
+	Callback = function(Value)
+		local username = Value:match("%((.-)%)")
+		selectedPlayerName = username
+		print("選択されたプレイヤー:", selectedPlayerName)
+	end
+})
+
+-- プレイヤーリスト更新関数
+local function UpdatePlayerList()
+	local playerNames = {}
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer then
+			table.insert(playerNames, player.DisplayName .. "(" .. player.Name .. ")")
+		end
+	end
+	if Dropdown then
+		Dropdown:Refresh(playerNames, true)
+	end
+end
+
+-- 初回実行
+UpdatePlayerList()
+
+-- プレイヤー入退室でリスト更新
+Players.PlayerAdded:Connect(function()
+	task.wait(1)
+	UpdatePlayerList()
+end)
+
+Players.PlayerRemoving:Connect(function()
+	task.defer(UpdatePlayerList)
+end)
+
+--Teleport
+TeleportTab:AddButton({
+	Name = "Teleport",
+	Callback = function()
+		if selectedPlayerName then
+			local targetPlayer = Players:FindFirstChild(selectedPlayerName)
+			if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+				LocalPlayer.Character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
+				print("テレポート完了")
+			else
+				OrionLib:MakeNotification({
+					Name = "テレポート失敗",
+					Content = "対象のプレイヤーが見つかりません",
+					Image = "rbxassetid://4483345998",
+					Time = 5
+				})
+			end
+		else
+			OrionLib:MakeNotification({
+				Name = "プレイヤー未選択",
+				Content = "プレイヤーを選んでください。",
+				Image = "rbxassetid://4483345998",
+				Time = 5
+			})
+		end
+	end
+})
+
+-- View Toggle
+TeleportTab:AddToggle({
+	Name = "View",
+	Default = false,
+	Callback = function(state)
+		local camera = Workspace.CurrentCamera
+		if state then
+			if selectedPlayerName then
+				local targetPlayer = Players:FindFirstChild(selectedPlayerName)
+				if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then
+					camera.CameraSubject = targetPlayer.Character:FindFirstChild("Humanoid")
+					print("カメラを", selectedPlayerName, "に切り替えました。")
+				else
+					warn("対象プレイヤーが見つかりません。")
+					OrionLib:MakeNotification({
+						Name = "対象のプレイヤーが見つかりませんでした。",
+						Content = "もう一度確認してください",
+						Image = "rbxassetid://4483345998",
+						Time = 5
+					})
+				end
+			else
+				warn("プレイヤーが選択されていません。")
+				OrionLib:MakeNotification({
+					Name = "プレイヤーが選択されていません。",
+					Content = "プレイヤーを選択してください",
+					Image = "rbxassetid://4483345998",
+					Time = 5
+				})
+			end
+		else
+			if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+				camera.CameraSubject = LocalPlayer.Character:FindFirstChild("Humanoid")
+				print("カメラを自分に戻しました。")
+			end
+		end
+	end
+})
+
+--ここから新しいタブ
+
+--タブの作成
+local ServerTab = Window:MakeTab({
+	Name = "Server",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
+
+--セクションの作成
+ServerTab:AddSection({
+	Name = "Place"
+})
+
+--Rejoin button
+ServerTab:AddButton({
+	Name = "Rejoin",
+	Callback = function()
+		print("Rejoining...")
+		game:GetService("TeleportService"):Teleport(game.PlaceId, game.Players.LocalPlayer)
+	end    
+})
+
+--ServerHop button
+ServerTab:AddButton({
+	Name = "ServerHop",
+	Callback = function()
+		print("Server hopping...")
+		local TeleportService = game:GetService("TeleportService")
+		local HttpService = game:GetService("HttpService")
+		local Players = game:GetService("Players")
+		local placeId = game.PlaceId
+		local servers = {}
+
+		local success, response = pcall(function()
+			return HttpService:JSONDecode(game:HttpGetAsync("https://games.roblox.com/v1/games/"..placeId.."/servers/Public?sortOrder=Asc&limit=100"))
+		end)
+
+		if success and response and response.data then
+			for _, server in pairs(response.data) do
+				if server.playing < server.maxPlayers and server.id ~= game.JobId then
+					table.insert(servers, server.id)
+				end
+			end
+
+			if #servers > 0 then
+				local randomServerId = servers[math.random(1, #servers)]
+				TeleportService:TeleportToPlaceInstance(placeId, randomServerId, Players.LocalPlayer)
+			else
+				warn("No available servers found.")
+			end
+		else
+			warn("Failed to get server list.")
+		end
+	end
+})
+
+--セクションの作成
+local Section = ServerTab:AddSection({
+	Name = "ServerInfo"
+})
+
+-- サーバー時間を動的に表示するために、Tickの差分を利用
+local startTime = tick() -- スクリプト開始時の時間を記録
+
+-- ラベルを追加する
+ServerTab:AddLabel("Game Name: " .. game.Name)
+ServerTab:AddLabel("PlaceID: " .. game.PlaceId)
+ServerTab:AddLabel("ServerID: " .. game.GameId)
+ServerTab:AddLabel("JobID: " .. game.JobId)
+
+local CoolLabel -- サーバー時間を表示するためのラベル
+
+-- サーバー時間の計算 (経過時間)
+local function formatTime(seconds)
+    local hours = math.floor(seconds / 3600)
+    local minutes = math.floor((seconds % 3600) / 60)
+    local secondsRemaining = math.floor(seconds % 60)
+    return string.format("%02d時間%02d分%02d秒", hours, minutes, secondsRemaining)
+end
+
+-- サーバー時間を動的に更新
+local RunService = game:GetService("RunService")
+local startTime = tick() -- スクリプト開始時の時間を記録
+
+-- ラベルの初期化
+CoolLabel = ServerTab:AddLabel("Server Time: Loading...")
+
+-- 更新関数
+local function updateServerTime()
+    local elapsedTime = tick() - startTime
+    local formattedTime = formatTime(elapsedTime)
+
+    -- ラベルの内容を更新
+    CoolLabel:Set("Server Time: " .. formattedTime)
+end
+
+-- 1秒ごとにサーバー時間を更新
+RunService.Heartbeat:Connect(function()
+    updateServerTime()
+    wait(1)  -- 1秒ごとに更新
+end)
+
+--ここから新しいタブ
+
+--タブの作成
+local ChatTab = Window:MakeTab({
+	Name = "Chat",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
+
+--セクションの作成
+local Section = Tab:AddSection({
+	Name = "PlayerChat"
+})
+
+--ChatSpy Toggle
+local ChatSpyEnabled = false -- 初期状態はオフ
+local spyOnMyself = false
+local public = true
+local publicItalics = true
+
+local privateProperties = {
+	Color = Color3.fromRGB(0,255,255), 
+	Font = Enum.Font.SourceSansBold,
+	TextSize = 18,
+}
+
+local StarterGui = game:GetService("StarterGui")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local saymsg = game:GetService("ReplicatedStorage"):WaitForChild("DefaultChatSystemChatEvents"):WaitForChild("SayMessageRequest")
+local getmsg = game:GetService("ReplicatedStorage"):WaitForChild("DefaultChatSystemChatEvents"):WaitForChild("OnMessageDoneFiltering")
+local instance = (_G.chatSpyInstance or 0) + 1
+_G.chatSpyInstance = instance
+
+-- ChatSpy機能本体
+local function onChatted(p, msg)
+	if _G.chatSpyInstance ~= instance then return end
+	if ChatSpyEnabled and (spyOnMyself or p ~= player) then
+		msg = msg:gsub("[\n\r]", ""):gsub("\t", " "):gsub("[ ]+", " ")
+		local hidden = true
+		local conn = getmsg.OnClientEvent:Connect(function(packet, channel)
+			if packet.SpeakerUserId == p.UserId and packet.Message == msg:sub(#msg - #packet.Message + 1)
+			and (channel == "All" or (channel == "Team" and not public and Players[packet.FromSpeaker].Team == player.Team)) then
+				hidden = false
+			end
+		end)
+		task.wait(1)
+		conn:Disconnect()
+
+		if hidden then
+			if public then
+				saymsg:FireServer((publicItalics and "/me " or "").."{SPY} ["..p.Name.."]: "..msg, "All")
+			else
+				privateProperties.Text = "{SPY} ["..p.Name.."]: "..msg
+				StarterGui:SetCore("ChatMakeSystemMessage", privateProperties)
+			end
+		end
+	end
+end
+
+-- イベント接続
+for _, p in ipairs(Players:GetPlayers()) do
+	p.Chatted:Connect(function(msg) onChatted(p, msg) end)
+end
+Players.PlayerAdded:Connect(function(p)
+	p.Chatted:Connect(function(msg) onChatted(p, msg) end)
+end)
+
+-- Orion UI のトグルと連携
+ChatTab:AddToggle({
+	Name = "ChatSpy",
+	Default = false,
+	Callback = function(Value)
+		ChatSpyEnabled = Value
+		privateProperties.Text = "{SPY " .. (Value and "ENABLED" or "DISABLED") .. "}"
+		StarterGui:SetCore("ChatMakeSystemMessage", privateProperties)
+	end
+})
+
+-- GUI調整（必要に応じて）
+local chatFrame = player.PlayerGui:WaitForChild("Chat"):WaitForChild("Frame")
+chatFrame.ChatChannelParentFrame.Visible = true
+chatFrame.ChatBarParentFrame.Position = chatFrame.ChatChannelParentFrame.Position + UDim2.new(0, 0, 0, chatFrame.ChatChannelParentFrame.Size.Y.Offset)
+
+OrionLib:Init()
