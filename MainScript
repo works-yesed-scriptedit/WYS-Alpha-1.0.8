@@ -769,7 +769,8 @@ local Section = ChatTab:AddSection({
 })
 
 --ChatSpy Toggle
--- ChatSpy設定
+
+-- ChatSpy 設定
 local ChatSpyEnabled = false
 local spyOnMyself = false
 local public = false
@@ -784,24 +785,23 @@ local privateProperties = {
 -- サービス取得
 local StarterGui = game:GetService("StarterGui")
 local Players = game:GetService("Players")
-local player = Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local saymsg = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents"):WaitForChild("SayMessageRequest")
 local getmsg = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents"):WaitForChild("OnMessageDoneFiltering")
 
--- インスタンス防止
-local instance = (_G.chatSpyInstance or 0) + 1
-_G.chatSpyInstance = instance
+-- チャット監視処理の定義
+local currentChatSpyInstance = 0
+local connections = {}
 
--- チャット監視処理
-local function onChatted(p, msg)
-	if _G.chatSpyInstance ~= instance then return end
-	if ChatSpyEnabled and (spyOnMyself or p ~= player) then
+local function onChatted(p, msg, instanceId)
+	if currentChatSpyInstance ~= instanceId then return end
+	if ChatSpyEnabled and (spyOnMyself or p ~= Players.LocalPlayer) then
 		msg = msg:gsub("[\n\r]", ""):gsub("\t", " "):gsub(" +", " ")
 		local hidden = true
 		local conn = getmsg.OnClientEvent:Connect(function(packet, channel)
 			if packet.SpeakerUserId == p.UserId and packet.Message == msg:sub(#msg - #packet.Message + 1)
-				and (channel == "All" or (channel == "Team" and not public and Players[packet.FromSpeaker].Team == player.Team)) then
+				and (channel == "All" or (channel == "Team" and not public and Players[packet.FromSpeaker].Team == Players.LocalPlayer.Team)) then
 				hidden = false
 			end
 		end)
@@ -819,30 +819,41 @@ local function onChatted(p, msg)
 	end
 end
 
--- プレイヤー接続
-for _, p in ipairs(Players:GetPlayers()) do
-	p.Chatted:Connect(function(msg)
-		onChatted(p, msg)
-	end)
-end
-
-Players.PlayerAdded:Connect(function(p)
-	p.Chatted:Connect(function(msg)
-		onChatted(p, msg)
-	end)
-end)
-
--- 既存の ChatTab にトグルを追加
-ChatTab:AddToggle({
+-- トグルをWindowに直接追加（セクションなし）
+Window:AddToggle({
 	Name = "ChatSpy",
 	Default = false,
 	Callback = function(Value)
 		ChatSpyEnabled = Value
 		privateProperties.Text = "{SPY " .. (Value and "ENABLED" or "DISABLED") .. "}"
 		StarterGui:SetCore("ChatMakeSystemMessage", privateProperties)
+
+		if Value then
+			currentChatSpyInstance += 1
+			local instanceId = currentChatSpyInstance
+
+			for _, p in ipairs(Players:GetPlayers()) do
+				local conn = p.Chatted:Connect(function(msg)
+					onChatted(p, msg, instanceId)
+				end)
+				table.insert(connections, conn)
+			end
+
+			local conn = Players.PlayerAdded:Connect(function(p)
+				local subConn = p.Chatted:Connect(function(msg)
+					onChatted(p, msg, instanceId)
+				end)
+				table.insert(connections, subConn)
+			end)
+			table.insert(connections, conn)
+
+		else
+			for _, conn in ipairs(connections) do
+				pcall(function() conn:Disconnect() end)
+			end
+			connections = {}
+		end
 	end
 })
-
-ChatTab:AddLabel("Label")
 
 OrionLib:Init()
