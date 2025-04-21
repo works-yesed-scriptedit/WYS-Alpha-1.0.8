@@ -787,7 +787,7 @@ ChatTab:AddToggle({
 			local saymsg = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents"):WaitForChild("SayMessageRequest")
 			local getmsg = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents"):WaitForChild("OnMessageDoneFiltering")
 
-			local public = true
+			local public = false
 			local publicItalics = true
 			local spyOnMyself = false
 
