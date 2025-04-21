@@ -769,86 +769,79 @@ local Section = ChatTab:AddSection({
 })
 
 --ChatSpy Toggle
-local spyConnections = {}
-local spyEnabled = false
-
 ChatTab:AddToggle({
 	Name = "ChatSpy",
 	Default = false,
 	Callback = function(Value)
-		spyEnabled = Value
+		local Players = game:GetService("Players")
+		local LocalPlayer = Players.LocalPlayer
+		local ReplicatedStorage = game:GetService("ReplicatedStorage")
+		local StarterGui = game:GetService("StarterGui")
 
-		-- 有効化処理
-		if Value then
-			local Players = game:GetService("Players")
-			local player = Players.LocalPlayer
-			local StarterGui = game:GetService("StarterGui")
-			local ReplicatedStorage = game:GetService("ReplicatedStorage")
-			local saymsg = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents"):WaitForChild("SayMessageRequest")
-			local getmsg = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents"):WaitForChild("OnMessageDoneFiltering")
+		local SayMessageRequest = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents"):WaitForChild("SayMessageRequest")
+		local OnMessageDoneFiltering = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents"):WaitForChild("OnMessageDoneFiltering")
 
-			local public = true
-			local publicItalics = true
-			local spyOnMyself = false
+		local spyEnabled = Value
+		local spyConnections = {}
 
-			local privateProperties = {
-				Color = Color3.fromRGB(0,255,255),
+		local function SendSystemMessage(text)
+			StarterGui:SetCore("ChatMakeSystemMessage", {
+				Text = text,
+				Color = Color3.fromRGB(0, 255, 255),
 				Font = Enum.Font.SourceSansBold,
-				TextSize = 18,
-			}
+				TextSize = 18
+			})
+		end
 
-			local function onChatted(p, msg)
-				if not spyEnabled then return end
-				if spyOnMyself or p ~= player then
-					msg = msg:gsub("[\n\r]", ""):gsub("\t", " "):gsub(" +", " ")
-					local hidden = true
-					local conn = getmsg.OnClientEvent:Connect(function(packet, channel)
-						if packet.SpeakerUserId == p.UserId and packet.Message == msg:sub(#msg - #packet.Message + 1) and
-							(channel == "All" or (channel == "Team" and not public and Players[packet.FromSpeaker].Team == player.Team)) then
-							hidden = false
-						end
-					end)
-					wait(1)
-					conn:Disconnect()
-					if hidden and spyEnabled then
-						if public then
-							saymsg:FireServer((publicItalics and "/me " or "") .. "{SPY} [" .. p.Name .. "]: " .. msg, "All")
-						else
-							privateProperties.Text = "{SPY} [" .. p.Name .. "]: " .. msg
-							StarterGui:SetCore("ChatMakeSystemMessage", privateProperties)
-						end
+		local function onChatted(p, msg)
+			if not spyEnabled or not msg or msg == "" then return end
+			msg = msg:gsub("[\n\r]", ""):gsub("\t", " "):gsub(" +", " ")
+
+			local hidden = true
+			local conn = OnMessageDoneFiltering.OnClientEvent:Connect(function(packet, channel)
+				if packet.SpeakerUserId == p.UserId and packet.Message == msg:sub(#msg - #packet.Message + 1) then
+					hidden = false
+				end
+			end)
+
+			task.wait(1)
+			conn:Disconnect()
+
+			if hidden then
+				local toName = nil
+				if msg:lower():sub(1, 3) == "/w " then
+					local split = msg:split(" ")
+					if #split >= 2 then
+						toName = split[2]
 					end
 				end
+
+				if toName then
+					SendSystemMessage("{SPY Whisper} " .. p.Name .. " → " .. toName .. ": " .. msg)
+				else
+					SendSystemMessage("{SPY} [" .. p.Name .. "]: " .. msg)
+				end
+			end
+		end
+
+		if spyEnabled then
+			for _, plr in ipairs(Players:GetPlayers()) do
+				table.insert(spyConnections, plr.Chatted:Connect(function(msg) onChatted(plr, msg) end))
 			end
 
-			for _, p in ipairs(Players:GetPlayers()) do
-				table.insert(spyConnections, p.Chatted:Connect(function(msg) onChatted(p, msg) end))
-			end
-
-			table.insert(spyConnections, Players.PlayerAdded:Connect(function(p)
-				table.insert(spyConnections, p.Chatted:Connect(function(msg) onChatted(p, msg) end))
+			table.insert(spyConnections, Players.PlayerAdded:Connect(function(plr)
+				table.insert(spyConnections, plr.Chatted:Connect(function(msg) onChatted(plr, msg) end))
 			end))
 
-			privateProperties.Text = "{SPY ENABLED}"
-			StarterGui:SetCore("ChatMakeSystemMessage", privateProperties)
-
+			SendSystemMessage("{SPY ENABLED}")
 		else
-			-- 無効化処理
 			for _, conn in ipairs(spyConnections) do
 				if conn and conn.Disconnect then
 					conn:Disconnect()
 				end
 			end
-			spyConnections = {}
-
-			local StarterGui = game:GetService("StarterGui")
-			local privateProperties = {
-				Text = "{SPY DISABLED}",
-				Color = Color3.fromRGB(255, 0, 0),
-				Font = Enum.Font.SourceSansBold,
-				TextSize = 18,
-			}
-			StarterGui:SetCore("ChatMakeSystemMessage", privateProperties)
+			table.clear(spyConnections)
+			SendSystemMessage("{SPY DISABLED}")
 		end
 	end
 })
