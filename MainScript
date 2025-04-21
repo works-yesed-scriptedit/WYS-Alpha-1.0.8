@@ -769,37 +769,38 @@ local Section = ChatTab:AddSection({
 })
 
 --ChatSpy Toggle
+local spyConnections = {}
+local spyEnabled = false
+
 ChatTab:AddToggle({
 	Name = "ChatSpy",
 	Default = false,
 	Callback = function(Value)
-		print(Value)
+		spyEnabled = Value
 
-		-- チャットスパイ スクリプト本体ここから
-		local StarterGui = game:GetService("StarterGui")
-		local Players = game:GetService("Players")
-		local player = Players.LocalPlayer
-		local saymsg = game:GetService("ReplicatedStorage"):WaitForChild("DefaultChatSystemChatEvents"):WaitForChild("SayMessageRequest")
-		local getmsg = game:GetService("ReplicatedStorage"):WaitForChild("DefaultChatSystemChatEvents"):WaitForChild("OnMessageDoneFiltering")
-		
-		-- 設定
-		local enabled = Value
-		local spyOnMyself = false
-		local public = true
-		local publicItalics = true
-		local privateProperties = {
-			Color = Color3.fromRGB(0,255,255),
-			Font = Enum.Font.SourceSansBold,
-			TextSize = 18,
-		}
+		-- 有効化処理
+		if Value then
+			local Players = game:GetService("Players")
+			local player = Players.LocalPlayer
+			local StarterGui = game:GetService("StarterGui")
+			local ReplicatedStorage = game:GetService("ReplicatedStorage")
+			local saymsg = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents"):WaitForChild("SayMessageRequest")
+			local getmsg = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents"):WaitForChild("OnMessageDoneFiltering")
 
-		local instance = (_G.chatSpyInstance or 0) + 1
-		_G.chatSpyInstance = instance
+			local public = true
+			local publicItalics = true
+			local spyOnMyself = false
 
-		local function onChatted(p, msg)
-			if _G.chatSpyInstance == instance then
-				if enabled and (spyOnMyself or p ~= player) then
-					msg = msg:gsub("[\n\r]", ""):gsub("\t", " "):gsub("[ ]+", " ")
+			local privateProperties = {
+				Color = Color3.fromRGB(0,255,255),
+				Font = Enum.Font.SourceSansBold,
+				TextSize = 18,
+			}
+
+			local function onChatted(p, msg)
+				if not spyEnabled then return end
+				if spyOnMyself or p ~= player then
+					msg = msg:gsub("[\n\r]", ""):gsub("\t", " "):gsub(" +", " ")
 					local hidden = true
 					local conn = getmsg.OnClientEvent:Connect(function(packet, channel)
 						if packet.SpeakerUserId == p.UserId and packet.Message == msg:sub(#msg - #packet.Message + 1) and
@@ -809,7 +810,7 @@ ChatTab:AddToggle({
 					end)
 					wait(1)
 					conn:Disconnect()
-					if hidden and enabled then
+					if hidden and spyEnabled then
 						if public then
 							saymsg:FireServer((publicItalics and "/me " or "") .. "{SPY} [" .. p.Name .. "]: " .. msg, "All")
 						else
@@ -819,22 +820,37 @@ ChatTab:AddToggle({
 					end
 				end
 			end
+
+			for _, p in ipairs(Players:GetPlayers()) do
+				table.insert(spyConnections, p.Chatted:Connect(function(msg) onChatted(p, msg) end))
+			end
+
+			table.insert(spyConnections, Players.PlayerAdded:Connect(function(p)
+				table.insert(spyConnections, p.Chatted:Connect(function(msg) onChatted(p, msg) end))
+			end))
+
+			privateProperties.Text = "{SPY ENABLED}"
+			StarterGui:SetCore("ChatMakeSystemMessage", privateProperties)
+
+		else
+			-- 無効化処理
+			for _, conn in ipairs(spyConnections) do
+				if conn and conn.Disconnect then
+					conn:Disconnect()
+				end
+			end
+			spyConnections = {}
+
+			local StarterGui = game:GetService("StarterGui")
+			local privateProperties = {
+				Text = "{SPY DISABLED}",
+				Color = Color3.fromRGB(255, 0, 0),
+				Font = Enum.Font.SourceSansBold,
+				TextSize = 18,
+			}
+			StarterGui:SetCore("ChatMakeSystemMessage", privateProperties)
 		end
-
-		for _, p in ipairs(Players:GetPlayers()) do
-			p.Chatted:Connect(function(msg) onChatted(p, msg) end)
-		end
-		Players.PlayerAdded:Connect(function(p)
-			p.Chatted:Connect(function(msg) onChatted(p, msg) end)
-		end)
-
-		privateProperties.Text = "{SPY " .. (enabled and "EN" or "DIS") .. "ABLED}"
-		StarterGui:SetCore("ChatMakeSystemMessage", privateProperties)
-
-		local chatFrame = player:WaitForChild("PlayerGui"):WaitForChild("Chat"):WaitForChild("Frame")
-		chatFrame.ChatChannelParentFrame.Visible = true
-		chatFrame.ChatBarParentFrame.Position = chatFrame.ChatChannelParentFrame.Position + UDim2.new(0, 0, chatFrame.ChatChannelParentFrame.Size.Y.Scale, chatFrame.ChatChannelParentFrame.Size.Y.Offset)
-	end    
+	end
 })
 
 OrionLib:Init()
