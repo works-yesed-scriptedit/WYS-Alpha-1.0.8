@@ -853,4 +853,146 @@ ChatTab:AddToggle({
 	end
 })
 
+--ここから新しいタブ
+-Tabの作成
+local SkyTab = Window:MakeTab({
+	Name = "Sky",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
+
+--空をもとに戻すボタン
+local Lighting = game:GetService("Lighting")
+local defaultSky = nil
+
+-- 初期Skyを保存（あれば）
+do
+	local originalSky = Lighting:FindFirstChildOfClass("Sky")
+	if originalSky then
+		defaultSky = originalSky:Clone()
+	end
+end
+
+SkyTab:AddButton({
+	Name = "元に戻す",
+	Callback = function()
+		print("デフォルトのSkyに戻す")
+
+		-- 現在のSkyを削除
+		local currentSky = Lighting:FindFirstChildOfClass("Sky")
+		if currentSky then
+			currentSky:Destroy()
+		end
+
+		-- 保存しておいたSkyを復元
+		if defaultSky then
+			local restoredSky = defaultSky:Clone()
+			restoredSky.Parent = Lighting
+		else
+			warn("元のSkyが保存されていません。最初にSkyが存在しなかった可能性があります。")
+		end
+	end
+})
+
+--空を朝にするボタン
+SkyTab:AddButton({
+	Name = "Morning",
+	Callback = function()
+		print("ボタンが押された")
+
+		local Lighting = game:GetService("Lighting")
+
+		-- 古いSkyを削除
+		local oldSky = Lighting:FindFirstChildOfClass("Sky")
+		if oldSky then
+			oldSky:Destroy()
+		end
+
+		-- SkyboxアセットIDを使って読み込み
+		local assetId = "rbxassetid://16676851582" -- SkyオブジェクトのアセットIDに置き換えて
+		local newSky = game:GetObjects(assetId)[1]
+
+		if newSky and newSky:IsA("Sky") then
+			newSky.Parent = Lighting
+		else
+			warn("Skyアセットが正しく読み込めませんでした")
+		end
+	end    
+})
+--空を夜にするボタン
+SkyTab:AddButton({
+	Name = "Night",
+	Callback = function()
+		print("ボタンが押された")
+
+		local Lighting = game:GetService("Lighting")
+
+		-- 古いSkyを削除
+		local oldSky = Lighting:FindFirstChildOfClass("Sky")
+		if oldSky then
+			oldSky:Destroy()
+		end
+
+		-- SkyboxアセットIDを使って読み込み
+		local assetId = "rbxassetid://7975080965" -- SkyオブジェクトのアセットIDに置き換えて
+		local newSky = game:GetObjects(assetId)[1]
+
+		if newSky and newSky:IsA("Sky") then
+			newSky.Parent = Lighting
+		else
+			warn("Skyアセットが正しく読み込めませんでした")
+		end
+	end    
+})
+--空を昼にするボタン
+SkyTab:AddButton({
+	Name = "Day",
+	Callback = function()
+		print("ボタンが押された")
+
+		local Lighting = game:GetService("Lighting")
+
+		-- 古いSkyを削除
+		local oldSky = Lighting:FindFirstChildOfClass("Sky")
+		if oldSky then
+			oldSky:Destroy()
+		end
+
+		-- SkyboxアセットIDを使って読み込み
+		local assetId = "rbxassetid://4607457995" -- SkyオブジェクトのアセットIDに置き換えて
+		local newSky = game:GetObjects(assetId)[1]
+
+		if newSky and newSky:IsA("Sky") then
+			newSky.Parent = Lighting
+		else
+			warn("Skyアセットが正しく読み込めませんでした")
+		end
+	end    
+})
+--空をリアルにするボタン
+SkyTab:AddButton({
+	Name = "Realistic Sky",
+	Callback = function()
+		print("ボタンが押された")
+
+		local Lighting = game:GetService("Lighting")
+
+		-- 古いSkyを削除
+		local oldSky = Lighting:FindFirstChildOfClass("Sky")
+		if oldSky then
+			oldSky:Destroy()
+		end
+
+		-- SkyboxアセットIDを使って読み込み
+		local assetId = "rbxassetid://10256505900" -- SkyオブジェクトのアセットIDに置き換えて
+		local newSky = game:GetObjects(assetId)[1]
+
+		if newSky and newSky:IsA("Sky") then
+			newSky.Parent = Lighting
+		else
+			warn("Skyアセットが正しく読み込めませんでした")
+		end
+	end    
+})
+
 OrionLib:Init()
