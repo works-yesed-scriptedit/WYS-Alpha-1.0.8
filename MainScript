@@ -845,7 +845,7 @@ end
 
 -- プレイヤーアイコンESPトグル（小さめ）
 ESPTab:AddToggle({
-	Name = "Icon Only ESP",
+	Name = "Icon",
 	Default = false,
 	Callback = function(Value)
 		iconEspEnabled = Value
