@@ -654,6 +654,118 @@ TeleportTab:AddToggle({
 --ここから新しいタブ
 
 --タブの作成
+local ESPTab = Window:MakeTab({
+	Name = "ESP",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
+
+--セクションの作成
+local Section = Tab:AddSection({
+	Name = "Player Esp"
+})
+
+--espトグル
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+local espEnabled = false
+local espLabels = {}
+
+local function createESP(player)
+	if player == LocalPlayer then return end
+	if not player.Character or not player.Character:FindFirstChild("Head") then return end
+
+	local head = player.Character.Head
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = "ESPLabel"
+	billboard.Adornee = head
+	billboard.Size = UDim2.new(0, 200, 0, 50)
+	billboard.StudsOffset = Vector3.new(0, 2, 0)
+	billboard.AlwaysOnTop = true
+	billboard.Parent = head
+
+	local textLabel = Instance.new("TextLabel")
+	textLabel.Size = UDim2.new(1, 0, 1, 0)
+	textLabel.BackgroundTransparency = 1
+	textLabel.TextStrokeTransparency = 0.5
+	textLabel.TextScaled = true
+	textLabel.Font = Enum.Font.SourceSansBold
+	textLabel.Parent = billboard
+
+	-- チームカラー設定
+	local function updateColor()
+		if player.Neutral or not player.Team then
+			textLabel.TextColor3 = Color3.new(1, 1, 1) -- 白（ニュートラル）
+		else
+			textLabel.TextColor3 = player.TeamColor.Color
+		end
+	end
+	updateColor()
+
+	-- ラベル更新処理
+	espLabels[player] = {
+		gui = billboard,
+		label = textLabel,
+		updateConn = RunService.RenderStepped:Connect(function()
+			if player.Character and player.Character:FindFirstChild("Humanoid") and player.Character:FindFirstChild("HumanoidRootPart") then
+				local humanoid = player.Character.Humanoid
+				local distance = (LocalPlayer.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+				textLabel.Text = string.format("%s / %s | HP: %d | %.0f studs", player.DisplayName, player.Name, humanoid.Health, distance)
+			else
+				textLabel.Text = "Loading..."
+			end
+			updateColor()
+		end)
+	}
+end
+
+local function removeESP(player)
+	if espLabels[player] then
+		if espLabels[player].updateConn then
+			espLabels[player].updateConn:Disconnect()
+		end
+		if espLabels[player].gui then
+			espLabels[player].gui:Destroy()
+		end
+		espLabels[player] = nil
+	end
+end
+
+-- トグル本体
+ESPTab:AddToggle({
+	Name = "ESP",
+	Default = false,
+	Callback = function(Value)
+		espEnabled = Value
+
+		if espEnabled then
+			for _, player in pairs(Players:GetPlayers()) do
+				if player ~= LocalPlayer then
+					createESP(player)
+				end
+			end
+
+			Players.PlayerAdded:Connect(function(player)
+				player.CharacterAdded:Connect(function()
+					if espEnabled then
+						wait(1) -- キャラ読み込み待機
+						createESP(player)
+					end
+				end)
+			end)
+		else
+			for _, player in pairs(Players:GetPlayers()) do
+				removeESP(player)
+			end
+		end
+	end    
+})
+
+--ここから新しいタブ
+
+--タブの作成
 local ServerTab = Window:MakeTab({
 	Name = "Server",
 	Icon = "rbxassetid://4483345998",
