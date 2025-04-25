@@ -806,13 +806,14 @@ local function createIconESP(player)
 	local humanoid = player.Character:FindFirstChild("Humanoid")
 	if not humanoid then return end
 
-	local thumbnail, isReady = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+	-- RobloxのサムネイルAPIを使って直接URLを作成
+	local thumbnail = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=100&height=100&format=png"
 
 	local billboard = Instance.new("BillboardGui")
 	billboard.Name = "IconESP"
 	billboard.Adornee = head
-	billboard.Size = UDim2.new(0, 30, 0, 30)  -- サイズ小さめに調整
-	billboard.StudsOffset = Vector3.new(0, 2, 0)  -- 少し下げて調整
+	billboard.Size = UDim2.new(0, 30, 0, 30) -- 小さめ
+	billboard.StudsOffset = Vector3.new(0, 2, 0)
 	billboard.AlwaysOnTop = true
 	billboard.Parent = head
 
@@ -843,9 +844,9 @@ local function setupIconCharacterESP(player)
 	end)
 end
 
--- プレイヤーアイコンESPトグル（小さめ）
+-- トグル本体
 ESPTab:AddToggle({
-	Name = "Icon",
+	Name = "Icon Only ESP",
 	Default = false,
 	Callback = function(Value)
 		iconEspEnabled = Value
