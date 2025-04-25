@@ -782,6 +782,10 @@ ESPTab:AddToggle({
 })
 
 --Icon Toggle
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
 local iconEspEnabled = false
 local iconEspLabels = {}
 
@@ -807,8 +811,8 @@ local function createIconESP(player)
 	local billboard = Instance.new("BillboardGui")
 	billboard.Name = "IconESP"
 	billboard.Adornee = head
-	billboard.Size = UDim2.new(0, 50, 0, 50)
-	billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+	billboard.Size = UDim2.new(0, 30, 0, 30)  -- サイズ小さめに調整
+	billboard.StudsOffset = Vector3.new(0, 2, 0)  -- 少し下げて調整
 	billboard.AlwaysOnTop = true
 	billboard.Parent = head
 
@@ -839,9 +843,9 @@ local function setupIconCharacterESP(player)
 	end)
 end
 
--- プレイヤーアイコンESPトグル
+-- プレイヤーアイコンESPトグル（小さめ）
 ESPTab:AddToggle({
-	Name = "Icon",
+	Name = "Icon Only ESP",
 	Default = false,
 	Callback = function(Value)
 		iconEspEnabled = Value
