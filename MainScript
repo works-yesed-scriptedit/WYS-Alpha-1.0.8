@@ -673,15 +673,30 @@ local LocalPlayer = Players.LocalPlayer
 local espEnabled = false
 local espLabels = {}
 
+local function removeESP(player)
+	if espLabels[player] then
+		if espLabels[player].updateConn then
+			espLabels[player].updateConn:Disconnect()
+		end
+		if espLabels[player].gui then
+			espLabels[player].gui:Destroy()
+		end
+		espLabels[player] = nil
+	end
+end
+
 local function createESP(player)
 	if player == LocalPlayer then return end
 	if not player.Character or not player.Character:FindFirstChild("Head") then return end
 
 	local head = player.Character.Head
+	local humanoid = player.Character:FindFirstChild("Humanoid")
+	if not humanoid then return end
+
 	local billboard = Instance.new("BillboardGui")
 	billboard.Name = "ESPLabel"
 	billboard.Adornee = head
-	billboard.Size = UDim2.new(0, 200, 0, 50)
+	billboard.Size = UDim2.new(0, 200, 0, 30)  -- 高さ小さめ
 	billboard.StudsOffset = Vector3.new(0, 2, 0)
 	billboard.AlwaysOnTop = true
 	billboard.Parent = head
@@ -690,21 +705,25 @@ local function createESP(player)
 	textLabel.Size = UDim2.new(1, 0, 1, 0)
 	textLabel.BackgroundTransparency = 1
 	textLabel.TextStrokeTransparency = 0.5
-	textLabel.TextScaled = true
+	textLabel.TextScaled = false
+	textLabel.TextSize = 14  -- 小さめ文字サイズ
 	textLabel.Font = Enum.Font.SourceSansBold
 	textLabel.Parent = billboard
 
-	-- チームカラー設定
 	local function updateColor()
 		if player.Neutral or not player.Team then
-			textLabel.TextColor3 = Color3.new(1, 1, 1) -- 白（ニュートラル）
+			textLabel.TextColor3 = Color3.new(1, 1, 1)
 		else
 			textLabel.TextColor3 = player.TeamColor.Color
 		end
 	end
 	updateColor()
 
-	-- ラベル更新処理
+	local function onDeath()
+		removeESP(player)
+	end
+	humanoid.Died:Connect(onDeath)
+
 	espLabels[player] = {
 		gui = billboard,
 		label = textLabel,
@@ -721,19 +740,18 @@ local function createESP(player)
 	}
 end
 
-local function removeESP(player)
-	if espLabels[player] then
-		if espLabels[player].updateConn then
-			espLabels[player].updateConn:Disconnect()
+local function setupCharacterESP(player)
+	player.CharacterAdded:Connect(function()
+		player.Character:WaitForChild("Humanoid")
+		player.Character:WaitForChild("Head")
+		wait(0.5)
+		if espEnabled then
+			createESP(player)
 		end
-		if espLabels[player].gui then
-			espLabels[player].gui:Destroy()
-		end
-		espLabels[player] = nil
-	end
+	end)
 end
 
--- トグル本体
+-- ESPトグル本体
 ESPTab:AddToggle({
 	Name = "ESP",
 	Default = false,
@@ -743,24 +761,24 @@ ESPTab:AddToggle({
 		if espEnabled then
 			for _, player in pairs(Players:GetPlayers()) do
 				if player ~= LocalPlayer then
-					createESP(player)
+					setupCharacterESP(player)
+					if player.Character then
+						createESP(player)
+					end
 				end
 			end
 
 			Players.PlayerAdded:Connect(function(player)
-				player.CharacterAdded:Connect(function()
-					if espEnabled then
-						wait(1) -- キャラ読み込み待機
-						createESP(player)
-					end
-				end)
+				if player ~= LocalPlayer then
+					setupCharacterESP(player)
+				end
 			end)
 		else
 			for _, player in pairs(Players:GetPlayers()) do
 				removeESP(player)
 			end
 		end
-	end    
+	end
 })
 
 --ここから新しいタブ
