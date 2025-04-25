@@ -781,6 +781,94 @@ ESPTab:AddToggle({
 	end
 })
 
+--Icon Toggle
+local iconEspEnabled = false
+local iconEspLabels = {}
+
+local function removeIconESP(player)
+	if iconEspLabels[player] then
+		if iconEspLabels[player].gui then
+			iconEspLabels[player].gui:Destroy()
+		end
+		iconEspLabels[player] = nil
+	end
+end
+
+local function createIconESP(player)
+	if player == LocalPlayer then return end
+	if not player.Character or not player.Character:FindFirstChild("Head") then return end
+
+	local head = player.Character.Head
+	local humanoid = player.Character:FindFirstChild("Humanoid")
+	if not humanoid then return end
+
+	local thumbnail, isReady = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = "IconESP"
+	billboard.Adornee = head
+	billboard.Size = UDim2.new(0, 50, 0, 50)
+	billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+	billboard.AlwaysOnTop = true
+	billboard.Parent = head
+
+	local imageLabel = Instance.new("ImageLabel")
+	imageLabel.Size = UDim2.new(1, 0, 1, 0)
+	imageLabel.BackgroundTransparency = 1
+	imageLabel.Image = thumbnail
+	imageLabel.Parent = billboard
+
+	local function onDeath()
+		removeIconESP(player)
+	end
+	humanoid.Died:Connect(onDeath)
+
+	iconEspLabels[player] = {
+		gui = billboard
+	}
+end
+
+local function setupIconCharacterESP(player)
+	player.CharacterAdded:Connect(function()
+		player.Character:WaitForChild("Humanoid")
+		player.Character:WaitForChild("Head")
+		wait(0.5)
+		if iconEspEnabled then
+			createIconESP(player)
+		end
+	end)
+end
+
+-- プレイヤーアイコンESPトグル
+ESPTab:AddToggle({
+	Name = "Icon",
+	Default = false,
+	Callback = function(Value)
+		iconEspEnabled = Value
+
+		if iconEspEnabled then
+			for _, player in pairs(Players:GetPlayers()) do
+				if player ~= LocalPlayer then
+					setupIconCharacterESP(player)
+					if player.Character then
+						createIconESP(player)
+					end
+				end
+			end
+
+			Players.PlayerAdded:Connect(function(player)
+				if player ~= LocalPlayer then
+					setupIconCharacterESP(player)
+				end
+			end)
+		else
+			for _, player in pairs(Players:GetPlayers()) do
+				removeIconESP(player)
+			end
+		end
+	end
+})
+
 --ここから新しいタブ
 
 --タブの作成
