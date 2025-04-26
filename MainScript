@@ -29,6 +29,73 @@ OrionLib:MakeNotification({
 	Image = "rbxassetid://4483345998",
 	Time = 5
 })
+--ホームタブの作成
+-- すでに OrionLib と Window は作成済みとして進めます
+
+-- プレイヤー名とゲーム名を取得
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local playerName = LocalPlayer.Name
+local MarketplaceService = game:GetService("MarketplaceService")
+local gameName = MarketplaceService:GetProductInfo(game.PlaceId).Name
+
+-- Homeタブを作成
+local HomeTab = Window:MakeTab({
+    Name = "Home",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+-- プロフィール情報（動的に取得）
+HomeTab:AddParagraph("Hello, "..playerName, "WorksYesed Hub ~ "..gameName.." ("..game.PlaceId..")")
+
+-- GroupBox: Server情報
+local ServerGroup = HomeTab:AddGroupBox("Server Information")
+ServerGroup:AddLabel("Players: " .. #Players:GetPlayers() .. " playing")
+ServerGroup:AddLabel("Maximum Players: 50 players can join")
+ServerGroup:AddLabel("Latency: 40ms")
+ServerGroup:AddLabel("Server Region: JP")
+
+local TimeLabel = ServerGroup:AddLabel("In server for: 00:00:00")
+
+ServerGroup:AddButton({
+    Name = "Join Script",
+    Callback = function()
+        setclipboard("YourJoinScriptHere")
+        OrionLib:MakeNotification({
+            Name = "Copied!",
+            Content = "Join Script copied to clipboard!",
+            Time = 3
+        })
+    end
+})
+
+-- GroupBox: Potassium
+local PotassiumGroup = HomeTab:AddGroupBox("Potassium")
+PotassiumGroup:AddLabel("Your executor seems to support this script.")
+
+-- GroupBox: Friends情報
+local FriendsGroup = HomeTab:AddGroupBox("Friends")
+FriendsGroup:AddLabel("In Server: no friends")
+FriendsGroup:AddLabel("Offline: 28 friends")
+FriendsGroup:AddLabel("Online: 2 friends")
+FriendsGroup:AddLabel("All: 100 friends")
+
+-- リアルタイムで滞在時間を更新
+local seconds = 0
+task.spawn(function()
+    while true do
+        seconds += 1
+        local hours = math.floor(seconds / 3600)
+        local minutes = math.floor((seconds % 3600) / 60)
+        local secs = seconds % 60
+
+        local timeString = string.format("%02d:%02d:%02d", hours, minutes, secs)
+        TimeLabel:Set("In server for: " .. timeString)
+
+        task.wait(1)
+    end
+end)
 
 --キャラクタータブの作成
 local CharacterTab = Window:MakeTab({
