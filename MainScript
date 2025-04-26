@@ -152,15 +152,16 @@ CharacterTab:AddButton({
 })
 
 --Infinite Jump Toggle
-local infiniteJumpConnection = nil  -- イベント接続を保持する変数
-local isInfiniteJumpEnabled = false  -- トグル状態を保持
+local infiniteJumpConnection = nil  -- 無限ジャンプの接続
+local humanoidDiedConnection = nil  -- 死亡時の接続
+local isInfiniteJumpEnabled = false  -- トグル状態保持
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local localPlayer = Players.LocalPlayer
 
--- 無限ジャンプの接続を行う関数
-local function connectInfiniteJump(humanoid)
+-- 無限ジャンプを有効にする
+local function enableInfiniteJump(humanoid)
     if not infiniteJumpConnection then
         infiniteJumpConnection = UserInputService.JumpRequest:Connect(function()
             if humanoid and humanoid:GetState() ~= Enum.HumanoidStateType.Physics then
@@ -168,41 +169,58 @@ local function connectInfiniteJump(humanoid)
             end
         end)
     end
-end
-
--- キャラクターがリスポーンしたときの処理
-local function onCharacterAdded(character)
-    local humanoid = character:WaitForChild("Humanoid")
-    if isInfiniteJumpEnabled then
-        connectInfiniteJump(humanoid)
+    if humanoid and not humanoidDiedConnection then
+        humanoidDiedConnection = humanoid.Died:Connect(function()
+            -- 死亡時には接続を切る
+            if infiniteJumpConnection then
+                infiniteJumpConnection:Disconnect()
+                infiniteJumpConnection = nil
+            end
+            if humanoidDiedConnection then
+                humanoidDiedConnection:Disconnect()
+                humanoidDiedConnection = nil
+            end
+        end)
     end
 end
 
--- 初回のキャラクターにも対応
+-- キャラクターが生成されたとき
+local function onCharacterAdded(character)
+    local humanoid = character:WaitForChild("Humanoid")
+    if isInfiniteJumpEnabled then
+        enableInfiniteJump(humanoid)
+    end
+end
+
+-- セットアップ
+localPlayer.CharacterAdded:Connect(onCharacterAdded)
 if localPlayer.Character then
     onCharacterAdded(localPlayer.Character)
 end
 
--- キャラクターがリスポーンした時のイベント接続
-localPlayer.CharacterAdded:Connect(onCharacterAdded)
-
--- トグルUIの設定
+-- トグルボタン
 CharacterTab:AddToggle({
     Name = "Infinite Jump",
     Default = false,
     Callback = function(Value)
         isInfiniteJumpEnabled = Value
-        local character = localPlayer.Character
-        local humanoid = character and character:FindFirstChild("Humanoid")
-
         if Value then
-            if humanoid then
-                connectInfiniteJump(humanoid)
+            local character = localPlayer.Character
+            if character then
+                local humanoid = character:FindFirstChild("Humanoid")
+                if humanoid then
+                    enableInfiniteJump(humanoid)
+                end
             end
         else
+            -- オフにしたらイベントをすべて切る
             if infiniteJumpConnection then
                 infiniteJumpConnection:Disconnect()
                 infiniteJumpConnection = nil
+            end
+            if humanoidDiedConnection then
+                humanoidDiedConnection:Disconnect()
+                humanoidDiedConnection = nil
             end
         end
     end,
