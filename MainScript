@@ -30,10 +30,10 @@ OrionLib:MakeNotification({
 	Time = 5
 })
 
--- まずHomeタブを作る
+-- Homeタブを作成
 local HomeTab = Window:MakeTab({
     Name = "Home",
-    Icon = "rbxassetid://4483345998",
+    Icon = "rbxassetid://4483345998", -- アイコン自由に変更してOK
     PremiumOnly = false
 })
 
@@ -51,12 +51,14 @@ HomeTab:AddSection({
 -- ラベルを管理するテーブル
 local ServerInfoLabels = {}
 
+-- ラベルを順番に作成
 ServerInfoLabels.Players = HomeTab:AddLabel("Players: Loading...")
 ServerInfoLabels.MaxPlayers = HomeTab:AddLabel("Maximum Players: " .. tostring(Players.MaxPlayers))
 ServerInfoLabels.Latency = HomeTab:AddLabel("Latency: Loading...")
 ServerInfoLabels.Region = HomeTab:AddLabel("Server Region: Loading...")
 ServerInfoLabels.InServerFor = HomeTab:AddLabel("In server for: 0s")
 
+-- Join Scriptボタン作成
 HomeTab:AddButton({
     Name = "Copy Join Script",
     Callback = function()
@@ -64,6 +66,7 @@ HomeTab:AddButton({
     end
 })
 
+-- Ping値からRegionを推測する関数
 local function guessRegion(ping)
     if ping <= 50 then
         return "JP"
@@ -78,19 +81,19 @@ local function guessRegion(ping)
     end
 end
 
+-- Heartbeatでリアルタイム更新
 RunService.Heartbeat:Connect(function()
+    -- プレイヤー人数
     ServerInfoLabels.Players:Set("Players: " .. tostring(#Players:GetPlayers()))
 
-    local stats = LocalPlayer:FindFirstChild("NetworkStats")
-    if stats then
-        local ping = stats:FindFirstChild("Data Ping")
-        if ping then
-            local pingValue = math.floor(ping:GetValue())
-            ServerInfoLabels.Latency:Set("Latency: " .. pingValue .. "ms")
-            ServerInfoLabels.Region:Set("Server Region: " .. guessRegion(pingValue))
-        end
-    end
+    -- Ping情報
+    local pingValue = math.floor(LocalPlayer:GetNetworkPing() * 1000)
+    ServerInfoLabels.Latency:Set("Latency: " .. pingValue .. "ms")
 
+    -- Region推測
+    ServerInfoLabels.Region:Set("Server Region: " .. guessRegion(pingValue))
+
+    -- プレース滞在時間
     local elapsed = math.floor(tick() - startTime)
     local minutes = math.floor(elapsed / 60)
     local seconds = elapsed % 60
