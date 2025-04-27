@@ -30,15 +30,21 @@ OrionLib:MakeNotification({
 	Time = 5
 })
 
---ホームタブの作成
+-- Homeタブを作成
+local HomeTab = Window:MakeTab({
+    Name = "Home",
+    Icon = "rbxassetid://4483345998", -- アイコンは好きに変えてOK
+    PremiumOnly = false
+})
+
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
 
 local startTime = tick()
 
--- Tabの中に追加
-local TopLeftBox = HomeTab:AddSection({
+-- 左上エリア：Server Informationセクション作成
+HomeTab:AddSection({
     Name = "Server Information"
 })
 
