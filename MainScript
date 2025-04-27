@@ -1,4 +1,4 @@
-print("ロード開始")
+print("ロード開始!")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -21,7 +21,7 @@ local Window = OrionLib:MakeWindow({
     ConfigFolder = "WorksYesed Hub" -- Put the name of your hub or script here!
 })
 
-print("ロード完了")
+print("ロード完了!")
 
 OrionLib:MakeNotification({
 	Name = "NB_sub1作",
