@@ -30,10 +30,10 @@ OrionLib:MakeNotification({
 	Time = 5
 })
 
--- Homeタブを作成
+-- まずHomeタブを作る
 local HomeTab = Window:MakeTab({
     Name = "Home",
-    Icon = "rbxassetid://4483345998", -- アイコンは好きに変えてOK
+    Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
@@ -51,14 +51,12 @@ HomeTab:AddSection({
 -- ラベルを管理するテーブル
 local ServerInfoLabels = {}
 
--- それぞれラベルを作成
 ServerInfoLabels.Players = HomeTab:AddLabel("Players: Loading...")
 ServerInfoLabels.MaxPlayers = HomeTab:AddLabel("Maximum Players: " .. tostring(Players.MaxPlayers))
 ServerInfoLabels.Latency = HomeTab:AddLabel("Latency: Loading...")
 ServerInfoLabels.Region = HomeTab:AddLabel("Server Region: Loading...")
 ServerInfoLabels.InServerFor = HomeTab:AddLabel("In server for: 0s")
 
--- Join Scriptボタン
 HomeTab:AddButton({
     Name = "Copy Join Script",
     Callback = function()
@@ -66,7 +64,6 @@ HomeTab:AddButton({
     end
 })
 
--- PingからRegionを推測する関数
 local function guessRegion(ping)
     if ping <= 50 then
         return "JP"
@@ -81,12 +78,9 @@ local function guessRegion(ping)
     end
 end
 
--- 定期更新処理
 RunService.Heartbeat:Connect(function()
-    -- プレイヤー人数
     ServerInfoLabels.Players:Set("Players: " .. tostring(#Players:GetPlayers()))
 
-    -- LatencyとRegion推測
     local stats = LocalPlayer:FindFirstChild("NetworkStats")
     if stats then
         local ping = stats:FindFirstChild("Data Ping")
@@ -97,7 +91,6 @@ RunService.Heartbeat:Connect(function()
         end
     end
 
-    -- 滞在時間
     local elapsed = math.floor(tick() - startTime)
     local minutes = math.floor(elapsed / 60)
     local seconds = elapsed % 60
