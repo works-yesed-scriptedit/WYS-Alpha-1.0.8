@@ -44,7 +44,7 @@ end
 
 local HomeTab = Window:MakeTab({
     Name = "Home",
-    Icon = "rbxassetid://12345678",
+    Icon = "rbxassetid://89991291117147",
     PremiumOnly = false
 })
 
