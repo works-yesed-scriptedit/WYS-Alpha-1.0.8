@@ -33,58 +33,26 @@ OrionLib:MakeNotification({
 --ホームタブの作成
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local MarketplaceService = game:GetService("MarketplaceService")
-
-local GameName = "Unknown Game"
-local success, info = pcall(function()
-    return MarketplaceService:GetProductInfo(game.PlaceId)
-end)
-if success and info and info.Name then
-    GameName = info.Name
-end
-
-local HomeTab = Window:MakeTab({
-    Name = "Home",
-    Icon = "rbxassetid://12783935326",
-    PremiumOnly = false
-})
-
--- ヘッダー
-HomeTab:AddParagraph(
-    "Hello! " .. string.upper(LocalPlayer.DisplayName),
-    LocalPlayer.Name .. " - WorksYesed Hub - " .. GameName .. " - " .. game.PlaceId
-)
-
---Server Info
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
-local TeleportService = game:GetService("TeleportService")
 
+local startTime = tick()
+
+-- Tabの中に追加
 local TopLeftBox = HomeTab:AddSection({
     Name = "Server Information"
 })
 
--- 各情報を入れるテーブル
+-- ラベルを管理するテーブル
 local ServerInfoLabels = {}
 
--- Players
+-- それぞれラベルを作成
 ServerInfoLabels.Players = HomeTab:AddLabel("Players: Loading...")
-
--- Maximum Players
 ServerInfoLabels.MaxPlayers = HomeTab:AddLabel("Maximum Players: " .. tostring(Players.MaxPlayers))
-
--- Latency
 ServerInfoLabels.Latency = HomeTab:AddLabel("Latency: Loading...")
-
--- Server Region
-ServerInfoLabels.Region = HomeTab:AddLabel("Server Region: Unknown")
-
--- In server for
-local startTime = tick()
+ServerInfoLabels.Region = HomeTab:AddLabel("Server Region: Loading...")
 ServerInfoLabels.InServerFor = HomeTab:AddLabel("In server for: 0s")
 
--- Join Script
+-- Join Scriptボタン
 HomeTab:AddButton({
     Name = "Copy Join Script",
     Callback = function()
@@ -92,17 +60,34 @@ HomeTab:AddButton({
     end
 })
 
--- 更新処理
+-- PingからRegionを推測する関数
+local function guessRegion(ping)
+    if ping <= 50 then
+        return "JP"
+    elseif ping <= 100 then
+        return "SG/KR"
+    elseif ping <= 200 then
+        return "US West"
+    elseif ping <= 300 then
+        return "US East"
+    else
+        return "Europe/Other"
+    end
+end
+
+-- 定期更新処理
 RunService.Heartbeat:Connect(function()
     -- プレイヤー人数
     ServerInfoLabels.Players:Set("Players: " .. tostring(#Players:GetPlayers()))
-    
-    -- レイテンシ (Ping)
+
+    -- LatencyとRegion推測
     local stats = LocalPlayer:FindFirstChild("NetworkStats")
     if stats then
         local ping = stats:FindFirstChild("Data Ping")
         if ping then
-            ServerInfoLabels.Latency:Set("Latency: " .. math.floor(ping:GetValue()) .. "ms")
+            local pingValue = math.floor(ping:GetValue())
+            ServerInfoLabels.Latency:Set("Latency: " .. pingValue .. "ms")
+            ServerInfoLabels.Region:Set("Server Region: " .. guessRegion(pingValue))
         end
     end
 
