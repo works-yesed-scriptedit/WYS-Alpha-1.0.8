@@ -54,6 +54,64 @@ HomeTab:AddParagraph(
     LocalPlayer.Name .. " - WorksYesed Hub - " .. GameName .. " - " .. game.PlaceId
 )
 
+--Server Info
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local TeleportService = game:GetService("TeleportService")
+
+local TopLeftBox = HomeTab:AddSection({
+    Name = "Server Information"
+})
+
+-- 各情報を入れるテーブル
+local ServerInfoLabels = {}
+
+-- Players
+ServerInfoLabels.Players = HomeTab:AddLabel("Players: Loading...")
+
+-- Maximum Players
+ServerInfoLabels.MaxPlayers = HomeTab:AddLabel("Maximum Players: " .. tostring(Players.MaxPlayers))
+
+-- Latency
+ServerInfoLabels.Latency = HomeTab:AddLabel("Latency: Loading...")
+
+-- Server Region
+ServerInfoLabels.Region = HomeTab:AddLabel("Server Region: Unknown")
+
+-- In server for
+local startTime = tick()
+ServerInfoLabels.InServerFor = HomeTab:AddLabel("In server for: 0s")
+
+-- Join Script
+HomeTab:AddButton({
+    Name = "Copy Join Script",
+    Callback = function()
+        setclipboard('game:GetService("TeleportService"):TeleportToPlaceInstance(' .. game.PlaceId .. ', "' .. game.JobId .. '")')
+    end
+})
+
+-- 更新処理
+RunService.Heartbeat:Connect(function()
+    -- プレイヤー人数
+    ServerInfoLabels.Players:Set("Players: " .. tostring(#Players:GetPlayers()))
+    
+    -- レイテンシ (Ping)
+    local stats = LocalPlayer:FindFirstChild("NetworkStats")
+    if stats then
+        local ping = stats:FindFirstChild("Data Ping")
+        if ping then
+            ServerInfoLabels.Latency:Set("Latency: " .. math.floor(ping:GetValue()) .. "ms")
+        end
+    end
+
+    -- 滞在時間
+    local elapsed = math.floor(tick() - startTime)
+    local minutes = math.floor(elapsed / 60)
+    local seconds = elapsed % 60
+    ServerInfoLabels.InServerFor:Set(string.format("In server for: %02d:%02d", minutes, seconds))
+end)
+
 --キャラクタータブの作成
 local CharacterTab = Window:MakeTab({
 	Name = "Character",
