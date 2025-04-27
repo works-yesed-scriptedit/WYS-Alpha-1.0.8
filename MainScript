@@ -30,139 +30,29 @@ OrionLib:MakeNotification({
 	Time = 5
 })
 --ホームタブの作成
--- 必要なサービス
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local MarketplaceService = game:GetService("MarketplaceService")
-local Stats = game:GetService("Stats")
 
--- プレイヤー情報
-local playerName = LocalPlayer.DisplayName or LocalPlayer.Name
-local username = LocalPlayer.Name
-
--- ゲーム情報
-local gameName = "Unknown Game"
-local placeId = game.PlaceId
+local GameName = "Unknown Game"
 local success, info = pcall(function()
-    return MarketplaceService:GetProductInfo(placeId)
+    return MarketplaceService:GetProductInfo(game.PlaceId)
 end)
-if success and info then
-    gameName = info.Name
+if success and info and info.Name then
+    GameName = info.Name
 end
 
--- Homeタブ作成
 local HomeTab = Window:MakeTab({
     Name = "Home",
-    Icon = "rbxassetid://4483345998",
+    Icon = "rbxassetid://12345678",
     PremiumOnly = false
 })
 
--- タイトルラベルたち
-HomeTab:AddLabel("Hello, "..playerName.." ("..username..")")
-HomeTab:AddLabel("WorksYesed Hub ~ "..gameName.." ("..placeId..")")
-HomeTab:AddLabel("----------------------------------------------") -- 区切り線
-
--- 【Server Informationグループ】
-local ServerGroup = HomeTab:AddGroupBox("Server Information")
-
-local playersLabel = ServerGroup:AddLabel("Players: Loading...")
-local maxPlayersLabel = ServerGroup:AddLabel("Maximum Players: Loading...")
-local latencyLabel = ServerGroup:AddLabel("Latency: Loading...")
-local regionLabel = ServerGroup:AddLabel("Server Region: Unknown")
-
-local timeLabel = ServerGroup:AddLabel("In server for: 00:00:00")
-
-ServerGroup:AddButton({
-    Name = "Join Script",
-    Callback = function()
-        setclipboard("YourJoinScriptHere")
-        OrionLib:MakeNotification({
-            Name = "Copied!",
-            Content = "Join Script copied to clipboard!",
-            Time = 3
-        })
-    end
-})
-
--- 【Potassiumグループ】
-local PotassiumGroup = HomeTab:AddGroupBox("Potassium")
-PotassiumGroup:AddLabel("Your executor seems to support this script.")
-
--- 【Friendsグループ】
-local FriendsGroup = HomeTab:AddGroupBox("Friends")
-
-local inServerFriendsLabel = FriendsGroup:AddLabel("In Server: Loading...")
-local offlineFriendsLabel = FriendsGroup:AddLabel("Offline: Loading...")
-local onlineFriendsLabel = FriendsGroup:AddLabel("Online: Loading...")
-local allFriendsLabel = FriendsGroup:AddLabel("All: Loading...")
-
--- ==========================
--- 【リアルタイム更新】
--- ==========================
-
-local seconds = 0
-
-task.spawn(function()
-    while true do
-        seconds += 1
-        local hours = math.floor(seconds / 3600)
-        local minutes = math.floor((seconds % 3600) / 60)
-        local secs = seconds % 60
-        local timeString = string.format("%02d:%02d:%02d", hours, minutes, secs)
-        timeLabel:Set("In server for: " .. timeString)
-
-        -- プレイヤー数
-        local playerCount = #Players:GetPlayers()
-        playersLabel:Set("Players: " .. playerCount .. " playing")
-
-        -- 最大プレイヤー数
-        local successMax, productInfo = pcall(function()
-            return MarketplaceService:GetProductInfo(placeId)
-        end)
-        if successMax and productInfo and productInfo.MaxPlayers then
-            maxPlayersLabel:Set("Maximum Players: " .. productInfo.MaxPlayers .. " players can join")
-        else
-            maxPlayersLabel:Set("Maximum Players: Unknown")
-        end
-
-        -- Ping取得（安全に）
-        local networkStats = Stats:FindFirstChild("Network")
-        if networkStats then
-            local pingItem = networkStats:FindFirstChild("ServerStatsItem")
-            if pingItem and pingItem:FindFirstChild("Data Ping") then
-                local ping = math.floor(pingItem["Data Ping"]:GetValue())
-                latencyLabel:Set("Latency: " .. ping .. "ms")
-            else
-                latencyLabel:Set("Latency: Unknown")
-            end
-        else
-            latencyLabel:Set("Latency: Unknown")
-        end
-
-        -- フレンドリスト
-        local friendsOnline = LocalPlayer:GetFriendsOnline()
-        local onlineCount = #friendsOnline
-        local allCount = 0 -- Allフレンド数を数える（ここ仮置き）
-
-        pcall(function()
-            allCount = #Players:GetPlayers() -- 仮：実際にはFriends API使うと正確
-        end)
-
-        local inServerFriends = 0
-        for _, friend in ipairs(friendsOnline) do
-            if Players:FindFirstChild(friend.Username) then
-                inServerFriends += 1
-            end
-        end
-
-        inServerFriendsLabel:Set("In Server: " .. inServerFriends .. " friends")
-        onlineFriendsLabel:Set("Online: " .. onlineCount .. " friends")
-        offlineFriendsLabel:Set("Offline: " .. (allCount - onlineCount) .. " friends")
-        allFriendsLabel:Set("All: " .. allCount .. " friends")
-
-        task.wait(1)
-    end
-end)
+-- ヘッダー
+HomeTab:AddParagraph(
+    "Hello **" .. LocalPlayer.DisplayName .. "**",
+    LocalPlayer.Name .. " - WorksYesed Hub - " .. GameName .. " - " .. game.PlaceId
+)
 
 --キャラクタータブの作成
 local CharacterTab = Window:MakeTab({
