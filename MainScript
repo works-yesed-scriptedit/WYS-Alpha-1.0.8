@@ -54,8 +54,6 @@ local ServerInfoLabels = {}
 -- ラベルを順番に作成
 ServerInfoLabels.Players = HomeTab:AddLabel("Players: Loading...")
 ServerInfoLabels.MaxPlayers = HomeTab:AddLabel("Maximum Players: " .. tostring(Players.MaxPlayers))
-ServerInfoLabels.Latency = HomeTab:AddLabel("Latency: Loading...")
-ServerInfoLabels.Region = HomeTab:AddLabel("Server Region: Loading...")
 ServerInfoLabels.InServerFor = HomeTab:AddLabel("In server for: 0s")
 
 -- Join Scriptボタン作成
@@ -66,32 +64,10 @@ HomeTab:AddButton({
     end
 })
 
--- Ping値からRegionを推測する関数
-local function guessRegion(ping)
-    if ping <= 50 then
-        return "JP"
-    elseif ping <= 100 then
-        return "SG/KR"
-    elseif ping <= 200 then
-        return "US West"
-    elseif ping <= 300 then
-        return "US East"
-    else
-        return "Europe/Other"
-    end
-end
-
 -- Heartbeatでリアルタイム更新
 RunService.Heartbeat:Connect(function()
     -- プレイヤー人数
     ServerInfoLabels.Players:Set("Players: " .. tostring(#Players:GetPlayers()))
-
-    -- Ping情報
-    local pingValue = math.floor(LocalPlayer:GetNetworkPing() * 1000)
-    ServerInfoLabels.Latency:Set("Latency: " .. pingValue .. "ms")
-
-    -- Region推測
-    ServerInfoLabels.Region:Set("Server Region: " .. guessRegion(pingValue))
 
     -- プレース滞在時間
     local elapsed = math.floor(tick() - startTime)
@@ -99,6 +75,17 @@ RunService.Heartbeat:Connect(function()
     local seconds = elapsed % 60
     ServerInfoLabels.InServerFor:Set(string.format("In server for: %02d:%02d", minutes, seconds))
 end)
+--Discord button
+HomeTab:AddButton({
+    Name = "リンクコピー",
+    Callback = function()
+        -- コピーするリンクを指定
+        local linkToCopy = "https://www.tiktok.com/@works.yesed"  -- ここにコピーしたいURLを設定
+        
+        -- リンクをコピー（実行者のクリップボードにコピー）
+        setclipboard(linkToCopy)  -- リンクをクリップボードにコピー
+    end    
+})
 
 --キャラクタータブの作成
 local CharacterTab = Window:MakeTab({
