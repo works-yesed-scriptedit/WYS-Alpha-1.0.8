@@ -29,6 +29,7 @@ OrionLib:MakeNotification({
 	Image = "rbxassetid://4483345998",
 	Time = 5
 })
+
 --ホームタブの作成
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
