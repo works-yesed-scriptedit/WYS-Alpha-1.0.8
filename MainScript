@@ -639,7 +639,7 @@ ToolTab:AddButton({
         local plusLabel = Instance.new("TextLabel")
         plusLabel.Parent = screenGui
         plusLabel.Size = UDim2.new(0, 80, 0, 80)
-        plusLabel.Position = UDim2.new(0.5, -40, 0.5, -40)
+        plusLabel.Position = UDim2.new(0.5, -60, 0.5, -60)
         plusLabel.Text = "+"
         plusLabel.TextSize = 60
         plusLabel.TextColor3 = Color3.fromRGB(50, 50, 50)
