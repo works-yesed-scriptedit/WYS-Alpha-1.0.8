@@ -1,4 +1,4 @@
---スクリプトをアップデート1
+--スクリプトをアップデート2
 print("ロード開始!")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
@@ -634,33 +634,47 @@ ToolTab:AddButton({
         -- ツールをバックパックに入れる
         sniperTool.Parent = player.Backpack
         
-        -- 画面に表示するTextLabelの作成（スコープ用の「+」）
+        -- 画面に表示するTextLabel（「+」）とその周りの円を作成
         local screenGui = Instance.new("ScreenGui")
         screenGui.Parent = player.PlayerGui
         
+        -- 円の枠を作成
+        local circleFrame = Instance.new("Frame")
+        circleFrame.Parent = screenGui
+        circleFrame.Size = UDim2.new(0, 200, 0, 200)  -- 円のサイズ（大きくする）
+        circleFrame.Position = UDim2.new(0.5, -100, 0.5, -100)  -- 画面中央に配置
+        circleFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)  -- 円の色（黒に近い灰色）
+        circleFrame.BackgroundTransparency = 1  -- 背景を透明に
+        circleFrame.BorderSizePixel = 5  -- 枠線の太さ
+        circleFrame.BorderColor3 = Color3.fromRGB(50, 50, 50)  -- 枠線の色（黒に近い灰色）
+        circleFrame.Shape = Enum.UIScaleType.Circle  -- 枠を円形にする
+
+        -- 「+」テキストを作成
         local textLabel = Instance.new("TextLabel")
         textLabel.Parent = screenGui
-        textLabel.Size = UDim2.new(0, 50, 0, 50)  -- サイズを設定
+        textLabel.Size = UDim2.new(0, 50, 0, 50)  -- 「+」のサイズ
         textLabel.Position = UDim2.new(0.5, -25, 0.5, -25)  -- 画面中央に配置
         textLabel.Text = "+"  -- 「+」を設定
-        textLabel.TextSize = 30  -- テキストサイズ
-        textLabel.TextColor3 = Color3.fromRGB(255, 0, 0)  -- テキストの色（赤）
+        textLabel.TextSize = 40  -- テキストサイズを少し大きくする
+        textLabel.TextColor3 = Color3.fromRGB(50, 50, 50)  -- テキストの色（黒に近い灰色）
         textLabel.BackgroundTransparency = 1  -- 背景を透明にする
         textLabel.TextStrokeTransparency = 0.8  -- テキストのアウトラインの透明度（見やすさを調整）
-        
+
         -- FOVを変更し、スコープの「+」を表示する処理
         sniperTool.Equipped:Connect(function()
             -- ツールが装備された時、FOVを20に設定
             camera.FieldOfView = 20
-            -- スコープの「+」を表示
+            -- スコープの「+」と円を表示
             textLabel.Visible = true
+            circleFrame.Visible = true
         end)
 
         sniperTool.Unequipped:Connect(function()
             -- ツールが外された時、FOVを70に戻す
             camera.FieldOfView = 70
-            -- スコープの「+」を非表示
+            -- スコープの「+」と円を非表示
             textLabel.Visible = false
+            circleFrame.Visible = false
         end)
 
         print("SniperToolがバックパックに追加されました。")
