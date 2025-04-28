@@ -1,4 +1,4 @@
-print("ロード")
+print("Githubさんちゃんと更新してよね")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -662,6 +662,12 @@ ToolTab:AddButton({
         explosionButton.AutoButtonColor = false
         explosionButton.Visible = false
 
+        -- 音を準備（ここでユーザーが指定したSoundIdに差し替えられる）
+        local fireSound = Instance.new("Sound")
+        fireSound.SoundId = "rbxassetid://1905367471"
+        fireSound.Volume = 1
+        fireSound.Parent = screenGui -- GUIに仕込む（ローカルなので聞こえる）
+
         -- クールダウン管理
         local lastFireTime = 0
         local cooldown = 3 -- 3秒
@@ -674,8 +680,12 @@ ToolTab:AddButton({
             end
             lastFireTime = currentTime
 
+            -- 音を鳴らす
+            fireSound:Play()
+
             -- クールダウン中テキスト
             explosionButton.Text = "Loading"
+            explosionButton.TextSize = 20 -- 文字小さく（ボタンに合わせる）
 
             -- ボタンアニメーション（押した感）
             explosionButton.Position = UDim2.new(0, 52, 0, 52)
@@ -690,7 +700,7 @@ ToolTab:AddButton({
             beam.Anchored = false
             beam.CanCollide = false
             beam.CFrame = camera.CFrame * CFrame.new(0, -0.2, -2) -- 少し下にして発射口っぽくする
-            beam.Velocity = camera.CFrame.LookVector * 300 -- 速さ（数字大きいほど速い）
+            beam.Velocity = camera.CFrame.LookVector * 300 -- 速さ
             beam.Parent = workspace
 
             -- ビームが何かに当たったら消える
@@ -702,12 +712,13 @@ ToolTab:AddButton({
                 end
             end)
 
-            -- 3秒経ったら自動消去
+            -- 3秒で自動消去
             game:GetService("Debris"):AddItem(beam, 3)
 
             -- クールダウン終了後にボタン戻す
             task.delay(cooldown, function()
                 explosionButton.Text = "💥"
+                explosionButton.TextSize = 30
             end)
         end
 
