@@ -1,4 +1,4 @@
-print("ロード開始してますよ〜")
+print("ロード開始してますよ")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -86,6 +86,69 @@ HomeTab:AddButton({
         setclipboard(linkToCopy)  -- リンクをクリップボードにコピー
     end    
 })
+
+-- 右下エリアの「フレンド情報」セクション
+HomeTab:AddSection({
+    Name = "Friend Information"
+})
+
+-- 四角いラベルを4つ作成
+local FriendInfoBoxes = {}
+
+FriendInfoBoxes.Offline = HomeTab:AddParagraph("Offline", "読み込み中...")
+FriendInfoBoxes.InServer = HomeTab:AddParagraph("In Server", "読み込み中...")
+FriendInfoBoxes.OnlineFriends = HomeTab:AddParagraph("Online Friends", "読み込み中...")
+FriendInfoBoxes.TotalFriends = HomeTab:AddParagraph("Friends", "読み込み中...")
+
+-- 更新関数
+local function updateFriendInfo()
+    local LocalPlayer = game.Players.LocalPlayer
+    local friends = {}
+    local onlineCount = 0
+    local inServer = false
+
+    -- 今のサーバーにフレンドがいるかチェック
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            if LocalPlayer:IsFriendsWith(player.UserId) then
+                inServer = true
+            end
+        end
+    end
+
+    -- オンラインのフレンド取得
+    pcall(function()
+        friends = LocalPlayer:GetFriendsOnline()
+    end)
+
+    for _, friend in ipairs(friends) do
+        if friend.IsOnline then
+            onlineCount += 1
+        end
+    end
+
+    -- フレンド総数
+    local totalFriendsCount = LocalPlayer.FriendCount
+
+    -- オフラインフレンド数
+    local offlineCount = totalFriendsCount - onlineCount
+
+    -- 四角内のテキストを更新
+    FriendInfoBoxes.Offline:Set("Offline: " .. offlineCount)
+    FriendInfoBoxes.InServer:Set("In Server: " .. (inServer and "Yes Friend" or "No Friend"))
+    FriendInfoBoxes.OnlineFriends:Set("Online Friends: " .. onlineCount)
+    FriendInfoBoxes.TotalFriends:Set("Friends: All " .. totalFriendsCount .. " friends")
+end
+
+-- 最初に更新
+updateFriendInfo()
+
+-- 3秒ごとに自動更新
+task.spawn(function()
+    while task.wait(3) do
+        updateFriendInfo()
+    end
+end)
 
 --キャラクタータブの作成
 local CharacterTab = Window:MakeTab({
