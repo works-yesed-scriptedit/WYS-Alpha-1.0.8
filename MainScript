@@ -1,4 +1,4 @@
-print("Githubちゃんと更新してよ")
+print("ロード中")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -662,11 +662,17 @@ ToolTab:AddButton({
         explosionButton.AutoButtonColor = false
         explosionButton.Visible = false
 
-        -- 音を準備（ここでユーザーが指定したSoundIdに差し替えられる）
+        -- 発射音
         local fireSound = Instance.new("Sound")
-        fireSound.SoundId = "rbxassetid://ここにあなたのサウンドIDを入れる"
+        fireSound.SoundId = "rbxassetid://1905367471"
         fireSound.Volume = 1
         fireSound.Parent = screenGui -- GUIに仕込む（ローカルなので聞こえる）
+
+        -- クールタイム音
+        local secondarySound = Instance.new("Sound")
+        secondarySound.SoundId = "rbxassetid://138084889"
+        secondarySound.Volume = 1
+        secondarySound.Parent = screenGui
 
         -- クールダウン管理
         local lastFireTime = 0
@@ -680,7 +686,7 @@ ToolTab:AddButton({
             end
             lastFireTime = currentTime
 
-            -- 音を鳴らす
+            -- 発射音を鳴らす
             fireSound:Play()
 
             -- クールダウン中テキスト
@@ -719,6 +725,11 @@ ToolTab:AddButton({
             task.delay(cooldown, function()
                 explosionButton.Text = "💥"
                 explosionButton.TextSize = 30
+            end)
+
+            -- クールダウン1秒後に2番目の音を鳴らす
+            task.delay(1, function()
+                secondarySound:Play()
             end)
         end
 
