@@ -1,4 +1,4 @@
-print("Githubさんちゃんと更新してよね")
+print("Github更新してよね")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -611,148 +611,165 @@ ToolTab:AddButton({
 
 --スナイパーツール
 ToolTab:AddButton({
-    Name = "Sniper Tool",
+    Name = "Sniper",
     Callback = function()
-        print("Sniper Tool button pressed")
-
         local player = game.Players.LocalPlayer
         local camera = workspace.CurrentCamera
 
-        -- ツール作成
+        -- すでにあるScreenGuiを探して消す
+        local existingGui = player.PlayerGui:FindFirstChild("SniperGui")
+        if existingGui then
+            existingGui:Destroy()
+        end
+
+        -- Sniperツール作成
         local sniperTool = Instance.new("Tool")
         sniperTool.Name = "SniperTool"
 
         local handle = Instance.new("Part")
         handle.Name = "Handle"
         handle.Size = Vector3.new(1, 5, 1)
-        handle.Anchored = false
         handle.CanCollide = false
+        handle.Anchored = false
         handle.Parent = sniperTool
 
         sniperTool.Parent = player.Backpack
 
-        -- GUI作成
-        local screenGui = Instance.new("ScreenGui")
-        screenGui.Parent = player.PlayerGui
+        -- ScreenGuiとボタン作成
+        local gui = Instance.new("ScreenGui")
+        gui.Name = "SniperGui"
+        gui.Parent = player.PlayerGui
 
-        -- ＋マーク
+        local fireButton = Instance.new("TextButton")
+        fireButton.Size = UDim2.new(0, 50, 0, 50)
+        fireButton.Position = UDim2.new(0, 20, 0, 20)
+        fireButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        fireButton.BackgroundTransparency = 0.5
+        fireButton.Text = "💥"
+        fireButton.TextSize = 30
+        fireButton.TextColor3 = Color3.new(1, 1, 1)
+        fireButton.Visible = false
+        fireButton.Parent = gui
+
         local plusLabel = Instance.new("TextLabel")
-        plusLabel.Parent = screenGui
         plusLabel.Size = UDim2.new(0, 80, 0, 80)
         plusLabel.Position = UDim2.new(0.5, -40, 0.5, -40)
+        plusLabel.BackgroundTransparency = 1
         plusLabel.Text = "+"
         plusLabel.TextSize = 60
         plusLabel.TextColor3 = Color3.fromRGB(50, 50, 50)
-        plusLabel.BackgroundTransparency = 1
         plusLabel.TextStrokeTransparency = 0.8
         plusLabel.Visible = false
+        plusLabel.Parent = gui
 
-        -- 💥ボタン
-        local explosionButton = Instance.new("TextButton")
-        explosionButton.Parent = screenGui
-        explosionButton.Size = UDim2.new(0, 50, 0, 50)
-        explosionButton.Position = UDim2.new(0, 50, 0, 50)
-        explosionButton.Text = "💥"
-        explosionButton.TextSize = 30
-        explosionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        explosionButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        explosionButton.BackgroundTransparency = 0.5
-        explosionButton.BorderSizePixel = 0
-        explosionButton.AnchorPoint = Vector2.new(0, 0)
-        explosionButton.AutoButtonColor = false
-        explosionButton.Visible = false
+        -- クールタイム制御用
+        local canFire = true
+        local cooldown = 3
+        local cooldownSoundId = "rbxassetid://138084889" -- クールダウン用音のID
+        local fireSoundId = "rbxassetid://1905367471"  -- 発射用音のID
 
-        -- 音を準備（ここでユーザーが指定したSoundIdに差し替えられる）
-        local fireSound = Instance.new("Sound")
-        fireSound.SoundId = "rbxassetid://1905367471"
-        fireSound.Volume = 1
-        fireSound.Parent = screenGui -- GUIに仕込む（ローカルなので聞こえる）
-
-        -- クールダウン管理
-        local lastFireTime = 0
-        local cooldown = 3 -- 3秒
-
-        -- ビーム発射処理
-        local function fireBeam()
-            local currentTime = tick()
-            if currentTime - lastFireTime < cooldown then
-                return
-            end
-            lastFireTime = currentTime
-
-            -- 音を鳴らす
-            fireSound:Play()
-
-            -- クールダウン中テキスト
-            explosionButton.Text = "Loading"
-            explosionButton.TextSize = 20 -- 文字小さく（ボタンに合わせる）
-
-            -- ボタンアニメーション（押した感）
-            explosionButton.Position = UDim2.new(0, 52, 0, 52)
-            task.wait(0.05)
-            explosionButton.Position = UDim2.new(0, 50, 0, 50)
-
-            -- 細長いビーム発射
-            local beam = Instance.new("Part")
-            beam.Size = Vector3.new(0.2, 0.2, 6) -- 細くて長い
-            beam.Material = Enum.Material.Neon
-            beam.BrickColor = BrickColor.new("Bright yellow")
-            beam.Anchored = false
-            beam.CanCollide = false
-            beam.CFrame = camera.CFrame * CFrame.new(0, -0.2, -2) -- 少し下にして発射口っぽくする
-            beam.Velocity = camera.CFrame.LookVector * 300 -- 速さ
-            beam.Parent = workspace
-
-            -- ビームが何かに当たったら消える
-            local connection
-            connection = beam.Touched:Connect(function(hit)
-                if hit and hit:IsDescendantOf(workspace) then
-                    beam:Destroy()
-                    connection:Disconnect()
-                end
-            end)
-
-            -- 3秒で自動消去
-            game:GetService("Debris"):AddItem(beam, 3)
-
-            -- クールダウン終了後にボタン戻す
-            task.delay(cooldown, function()
-                explosionButton.Text = "💥"
-                explosionButton.TextSize = 30
+        -- クールタイム音を再生
+        local function playCooldownSound()
+            local sound = Instance.new("Sound")
+            sound.SoundId = cooldownSoundId
+            sound.Volume = 1
+            sound.Parent = player.PlayerGui
+            sound:Play()
+            sound.Ended:Connect(function()
+                sound:Destroy()
             end)
         end
 
-        explosionButton.MouseButton1Click:Connect(fireBeam)
+        -- 発射音を再生
+        local function playFireSound()
+            local sound = Instance.new("Sound")
+            sound.SoundId = fireSoundId
+            sound.Volume = 1
+            sound.Parent = player.PlayerGui
+            sound:Play()
+            sound.Ended:Connect(function()
+                sound:Destroy()
+            end)
+        end
 
-        -- カメラズーム保存
-        local savedMinZoom = player.CameraMinZoomDistance
-        local savedMaxZoom = player.CameraMaxZoomDistance
+        local function fireBeam()
+            local beam = Instance.new("Part")
+            beam.Size = Vector3.new(0.3, 0.3, 100) -- 細く長く
+            beam.CFrame = camera.CFrame * CFrame.new(0, -0.2, -50)
+            beam.Color = Color3.new(1, 1, 0)
+            beam.Anchored = true
+            beam.CanCollide = false
+            beam.Material = Enum.Material.Neon
+            beam.Parent = workspace
 
-        -- 装備した時
+            -- レイキャストしてヒット検出
+            local rayOrigin = camera.CFrame.Position
+            local rayDirection = camera.CFrame.LookVector * 1000
+            local raycastParams = RaycastParams.new()
+            raycastParams.FilterDescendantsInstances = {player.Character}
+            raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+            local result = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
+            if result then
+                local hitPart = result.Instance
+                if hitPart and hitPart.Parent:FindFirstChild("Humanoid") then
+                    hitPart.Parent.Humanoid.Health = 0 -- 即死っぽく
+                end
+            end
+
+            game:GetService("Debris"):AddItem(beam, 3)
+        end
+
+        -- ボタン押したとき
+        fireButton.MouseButton1Click:Connect(function()
+            if canFire then
+                canFire = false
+
+                -- 発射音を鳴らす
+                playFireSound()
+
+                -- ボタン押したらビーム発射
+                fireBeam()
+
+                -- ボタンアニメーション
+                fireButton.Position = fireButton.Position + UDim2.new(0, 2, 0, 2)
+                task.wait(0.05)
+                fireButton.Position = fireButton.Position - UDim2.new(0, 2, 0, 2)
+
+                -- ローディング中
+                fireButton.Text = "Loading"
+
+                -- 1秒後にクールダウン音を鳴らす
+                task.delay(1, function()
+                    playCooldownSound()
+                end)
+
+                -- 3秒待ったら撃てるように
+                task.wait(cooldown)
+                fireButton.Text = "💥"
+                canFire = true
+            end
+        end)
+
+        -- ツール装備時
         sniperTool.Equipped:Connect(function()
-            print("Sniper Tool Equipped")
             camera.FieldOfView = 20
-            explosionButton.Visible = true
-            plusLabel.Visible = true
-
             player.CameraMode = Enum.CameraMode.LockFirstPerson
-            player.CameraMinZoomDistance = 0
-            player.CameraMaxZoomDistance = 0
+            camera.CameraMaxZoomDistance = 0
+            camera.CameraMinZoomDistance = 0
+            fireButton.Visible = true
+            plusLabel.Visible = true
         end)
 
-        -- 外した時
+        -- ツール外した時
         sniperTool.Unequipped:Connect(function()
-            print("Sniper Tool Unequipped")
             camera.FieldOfView = 70
-            explosionButton.Visible = false
-            plusLabel.Visible = false
-
             player.CameraMode = Enum.CameraMode.Classic
-            player.CameraMinZoomDistance = 0
-            player.CameraMaxZoomDistance = 128
+            camera.CameraMaxZoomDistance = 128
+            camera.CameraMinZoomDistance = 0
+            fireButton.Visible = false
+            plusLabel.Visible = false
         end)
-
-        print("SniperToolがバックパックに追加されました。")
     end
 })
 
