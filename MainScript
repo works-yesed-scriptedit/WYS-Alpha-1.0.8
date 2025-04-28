@@ -616,6 +616,7 @@ ToolTab:AddButton({
         
         -- クライアント側でツールを作成してバックパックに追加
         local player = game.Players.LocalPlayer
+        local camera = game.Workspace.CurrentCamera
         
         -- ツールを作成
         local sniperTool = Instance.new("Tool")
@@ -632,6 +633,17 @@ ToolTab:AddButton({
         -- ツールをバックパックに入れる
         sniperTool.Parent = player.Backpack
         
+        -- FOVを変更する処理
+        sniperTool.Equipped:Connect(function()
+            -- ツールが装備された時、FOVを20に設定
+            camera.FieldOfView = 20
+        end)
+
+        sniperTool.Unequipped:Connect(function()
+            -- ツールが外された時、FOVを70に戻す
+            camera.FieldOfView = 70
+        end)
+
         print("SniperToolがバックパックに追加されました。")
     end
 })
