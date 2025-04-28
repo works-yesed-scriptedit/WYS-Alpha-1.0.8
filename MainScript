@@ -1,4 +1,4 @@
-print("ロード中")
+print("ロード中です")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -673,7 +673,7 @@ ToolTab:AddButton({
         local function createBeam()
             -- ビームのパーツを作成
             local beamPart = Instance.new("Part")
-            beamPart.Size = Vector3.new(1, 1, 100)  -- ビームのサイズ（細長く、奥に長く）
+            beamPart.Size = Vector3.new(1, 1, 200)  -- ビームのサイズ（さらに細長く、奥に長く）
             beamPart.Shape = Enum.PartType.Cylinder
             beamPart.Position = camera.CFrame.Position + camera.CFrame.LookVector * 5 - Vector3.new(0, 2, 0)  -- 発射位置を少し下に設定
             beamPart.Anchored = true
@@ -699,11 +699,17 @@ ToolTab:AddButton({
                 beamPart:Destroy()
             else
                 -- 障害物に当たらなかった場合は、そのまま進む
-                local beamTween = game:GetService("TweenService"):Create(beamPart, TweenInfo.new(1), {Position = beamPart.Position + direction * distance})
+                local beamTween = game:GetService("TweenService"):Create(beamPart, TweenInfo.new(0.5), {Position = beamPart.Position + direction * distance})
                 beamTween:Play()
                 beamTween.Completed:Connect(function()
                     beamPart:Destroy()  -- ビームが終了したら削除
                 end)
+            end
+
+            -- 3秒後にビームを消す
+            wait(3)
+            if beamPart and beamPart.Parent then
+                beamPart:Destroy()  -- 3秒後に消す
             end
         end
 
@@ -744,6 +750,17 @@ ToolTab:AddButton({
 
         -- ビームを発射する処理（ボタンが押されたら）
         explosionButton.MouseButton1Click:Connect(function()
+            -- ボタンのアニメーション：押した時に一瞬へこむ
+            local originalPosition = explosionButton.Position
+            local tweenIn = game:GetService("TweenService"):Create(explosionButton, TweenInfo.new(0.1), {Position = UDim2.new(0, 15, 0, 15)})
+            local tweenOut = game:GetService("TweenService"):Create(explosionButton, TweenInfo.new(0.1), {Position = originalPosition})
+            
+            tweenIn:Play()
+            tweenIn.Completed:Connect(function()
+                tweenOut:Play()
+            end)
+            
+            -- ビームを作成
             createBeam()  -- ビームを作成
         end)
 
