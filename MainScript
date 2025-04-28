@@ -1,4 +1,4 @@
-print("ロード中")
+print("ロード開始")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -705,16 +705,21 @@ ToolTab:AddButton({
             beam.BrickColor = BrickColor.new("Bright yellow")
             beam.Anchored = false
             beam.CanCollide = false
-            beam.CFrame = camera.CFrame * CFrame.new(0, -0.2, -2) -- 少し下にして発射口っぽくする
+            beam.CFrame = camera.CFrame * CFrame.new(0, 0, -2) -- 発射位置をカメラの前方に変更
             beam.Velocity = camera.CFrame.LookVector * 300 -- 速さ
             beam.Parent = workspace
 
-            -- ビームが何かに当たったら消える
+            -- ビームが何かに当たったら即死
             local connection
             connection = beam.Touched:Connect(function(hit)
-                if hit and hit:IsDescendantOf(workspace) then
-                    beam:Destroy()
-                    connection:Disconnect()
+                if hit and hit.Parent:FindFirstChild("Humanoid") then
+                    local humanoid = hit.Parent.Humanoid
+                    if humanoid then
+                        -- 健康を即座に0に設定して死亡させる
+                        humanoid.Health = 0
+                    end
+                    beam:Destroy() -- ビームを破壊
+                    connection:Disconnect() -- コネクション解除
                 end
             end)
 
@@ -734,10 +739,6 @@ ToolTab:AddButton({
         end
 
         explosionButton.MouseButton1Click:Connect(fireBeam)
-
-        -- カメラズーム保存
-        local savedMinZoom = player.CameraMinZoomDistance
-        local savedMaxZoom = player.CameraMaxZoomDistance
 
         -- 装備した時
         sniperTool.Equipped:Connect(function()
