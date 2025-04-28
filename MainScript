@@ -1,4 +1,4 @@
-print("Now Loading...")
+print("Now Loading..")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -86,12 +86,12 @@ HomeTab:AddButton({
         setclipboard(linkToCopy)  -- リンクをクリップボードにコピー
     end    
 })
-
--- 右下エリアの「フレンド情報」セクション
+-- 右下エリア「Friend Information」
 HomeTab:AddSection({
     Name = "Friend Information"
 })
 
+-- 四角のボックス作成
 local FriendInfoBoxes = {}
 
 FriendInfoBoxes.Offline = HomeTab:AddParagraph("Offline", "Loading...")
@@ -99,10 +99,62 @@ FriendInfoBoxes.InServer = HomeTab:AddParagraph("In Server", "Loading...")
 FriendInfoBoxes.OnlineFriends = HomeTab:AddParagraph("Online Friends", "Loading...")
 FriendInfoBoxes.TotalFriends = HomeTab:AddParagraph("Friends", "Loading...")
 
--- 後から更新する関数だけ用意して、今は実行しない
+-- フレンド情報更新関数
 local function updateFriendInfo()
-    -- あとで作成する
+    local LocalPlayer = game.Players.LocalPlayer
+    if not LocalPlayer then return end
+
+    local onlineCount = 0
+    local inServer = false
+
+    -- サーバー内にフレンドがいるかチェック
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            pcall(function()
+                if LocalPlayer:IsFriendsWith(player.UserId) then
+                    inServer = true
+                end
+            end)
+        end
+    end
+
+    -- オンラインフレンド数取得
+    local success, onlineFriends = pcall(function()
+        return LocalPlayer:GetFriendsOnline()
+    end)
+
+    if not success then
+        onlineFriends = {}
+    end
+
+    for _, friend in ipairs(onlineFriends) do
+        if friend.IsOnline then
+            onlineCount += 1
+        end
+    end
+
+    -- 総フレンド数
+    local totalFriendsCount = LocalPlayer.FriendCount or 0
+
+    -- オフラインフレンド数
+    local offlineCount = totalFriendsCount - onlineCount
+
+    -- 四角ボックスを更新
+    FriendInfoBoxes.Offline:Set("Offline", offlineCount .. " friends")
+    FriendInfoBoxes.InServer:Set("In Server", inServer and "Yes Friend" or "No Friend")
+    FriendInfoBoxes.OnlineFriends:Set("Online Friends", onlineCount .. " friends")
+    FriendInfoBoxes.TotalFriends:Set("Friends", "All " .. totalFriendsCount .. " friends")
 end
+
+-- 最初に一回だけ実行
+updateFriendInfo()
+
+-- 3秒ごとに自動更新
+task.spawn(function()
+    while task.wait(3) do
+        updateFriendInfo()
+    end
+end)
 
 --ここから新しいタブ
 --キャラクタータブの作成
