@@ -1,4 +1,4 @@
---スクリプトをアップデート2
+--スクリプトをアップデート1
 print("ロード開始!")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
@@ -634,30 +634,33 @@ ToolTab:AddButton({
         -- ツールをバックパックに入れる
         sniperTool.Parent = player.Backpack
         
-        -- 画面いっぱいに表示する画像の作成
+        -- 画面に表示するTextLabelの作成（スコープ用の「+」）
         local screenGui = Instance.new("ScreenGui")
         screenGui.Parent = player.PlayerGui
         
-        local imageLabel = Instance.new("ImageLabel")
-        imageLabel.Parent = screenGui
-        imageLabel.Size = UDim2.new(1, 0, 1, 0)  -- 画面いっぱいに表示
-        imageLabel.Position = UDim2.new(0, 0, 0, 0)
-        imageLabel.Image = "rbxassetid://6105326"  -- 画像のIDを指定
-        imageLabel.Visible = false  -- 初期設定で非表示
-
-        -- FOVを変更し、画像を表示する処理
+        local textLabel = Instance.new("TextLabel")
+        textLabel.Parent = screenGui
+        textLabel.Size = UDim2.new(0, 50, 0, 50)  -- サイズを設定
+        textLabel.Position = UDim2.new(0.5, -25, 0.5, -25)  -- 画面中央に配置
+        textLabel.Text = "+"  -- 「+」を設定
+        textLabel.TextSize = 30  -- テキストサイズ
+        textLabel.TextColor3 = Color3.fromRGB(255, 0, 0)  -- テキストの色（赤）
+        textLabel.BackgroundTransparency = 1  -- 背景を透明にする
+        textLabel.TextStrokeTransparency = 0.8  -- テキストのアウトラインの透明度（見やすさを調整）
+        
+        -- FOVを変更し、スコープの「+」を表示する処理
         sniperTool.Equipped:Connect(function()
             -- ツールが装備された時、FOVを20に設定
             camera.FieldOfView = 20
-            -- 画像を表示
-            imageLabel.Visible = true
+            -- スコープの「+」を表示
+            textLabel.Visible = true
         end)
 
         sniperTool.Unequipped:Connect(function()
             -- ツールが外された時、FOVを70に戻す
             camera.FieldOfView = 70
-            -- 画像を非表示
-            imageLabel.Visible = false
+            -- スコープの「+」を非表示
+            textLabel.Visible = false
         end)
 
         print("SniperToolがバックパックに追加されました。")
