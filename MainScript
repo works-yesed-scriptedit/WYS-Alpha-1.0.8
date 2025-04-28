@@ -1,4 +1,4 @@
-print("ちゃんと更新しろや")
+print("Githubちゃんと更新しろや")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
