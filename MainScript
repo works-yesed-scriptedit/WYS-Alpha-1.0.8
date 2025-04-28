@@ -1,4 +1,4 @@
-print("Github更新して)
+print("Loading")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -616,6 +616,12 @@ ToolTab:AddButton({
         local player = game.Players.LocalPlayer
         local camera = workspace.CurrentCamera
 
+        -- すでにあるScreenGuiを探して消す
+        local existingGui = player.PlayerGui:FindFirstChild("SniperGui")
+        if existingGui then
+            existingGui:Destroy()
+        end
+
         -- Sniperツール作成
         local sniperTool = Instance.new("Tool")
         sniperTool.Name = "SniperTool"
@@ -642,7 +648,7 @@ ToolTab:AddButton({
         fireButton.Text = "💥"
         fireButton.TextSize = 30
         fireButton.TextColor3 = Color3.new(1, 1, 1)
-        fireButton.Visible = false  -- 初期状態では非表示
+        fireButton.Visible = false
         fireButton.Parent = gui
 
         local plusLabel = Instance.new("TextLabel")
@@ -653,14 +659,14 @@ ToolTab:AddButton({
         plusLabel.TextSize = 60
         plusLabel.TextColor3 = Color3.fromRGB(50, 50, 50)
         plusLabel.TextStrokeTransparency = 0.8
-        plusLabel.Visible = false  -- 初期状態では非表示
+        plusLabel.Visible = false
         plusLabel.Parent = gui
 
         -- クールタイム制御用
         local canFire = true
         local cooldown = 3
-        local cooldownSoundId = "rbxassetid://138084889" -- クールダウン音のID
-        local fireSoundId = "rbxassetid://1905367471"  -- 発射音のID
+        local cooldownSoundId = "rbxassetid://138084889" -- クールダウン用音のID
+        local fireSoundId = "rbxassetid://1905367471"  -- 発射用音のID
 
         -- クールタイム音を再生
         local function playCooldownSound()
@@ -686,11 +692,10 @@ ToolTab:AddButton({
             end)
         end
 
-        -- ビームを発射する関数
         local function fireBeam()
             local beam = Instance.new("Part")
-            beam.Size = Vector3.new(0.3, 0.3, 100)  -- 細く長いビーム
-            beam.CFrame = camera.CFrame * CFrame.new(0, -0.2, -50)
+            beam.Size = Vector3.new(0.3, 0.3, 100) -- 細く長く
+            beam.CFrame = camera.CFrame * CFrame.new(0, -0.2, -1) -- 発射位置の微調整
             beam.Color = Color3.new(1, 1, 0)
             beam.Anchored = true
             beam.CanCollide = false
@@ -708,14 +713,15 @@ ToolTab:AddButton({
             if result then
                 local hitPart = result.Instance
                 if hitPart and hitPart.Parent:FindFirstChild("Humanoid") then
-                    hitPart.Parent.Humanoid.Health = 0  -- 即死っぽく
+                    -- 即死処理
+                    hitPart.Parent.Humanoid.Health = 0
                 end
             end
 
-            game:GetService("Debris"):AddItem(beam, 3)  -- 3秒後にビームを消す
+            game:GetService("Debris"):AddItem(beam, 3)
         end
 
-        -- ボタンを押したときの処理
+        -- ボタン押したとき
         fireButton.MouseButton1Click:Connect(function()
             if canFire then
                 canFire = false
@@ -723,47 +729,56 @@ ToolTab:AddButton({
                 -- 発射音を鳴らす
                 playFireSound()
 
-                -- ビームを発射
+                -- ボタン押したらビーム発射
                 fireBeam()
 
                 -- ボタンアニメーション
-                fireButton.Position = fireButton.Position + UDim2.new(0, 2, 0, 2)
-                task.wait(0.05)
-                fireButton.Position = fireButton.Position - UDim2.new(0, 2, 0, 2)
+                local tweenService = game:GetService("TweenService")
+                local tweenInfo = TweenInfo.new(0.05, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out)
+                local goal = {Position = fireButton.Position + UDim2.new(0, 2, 0, 2)}
+                local tween = tweenService:Create(fireButton, tweenInfo, goal)
+                tween:Play()
+                tween.Completed:Connect(function()
+                    local goalBack = {Position = fireButton.Position - UDim2.new(0, 2, 0, 2)}
+                    local tweenBack = tweenService:Create(fireButton, tweenInfo, goalBack)
+                    tweenBack:Play()
+                end)
 
                 -- ローディング中
                 fireButton.Text = "Loading"
 
-                -- クールタイム音を1秒後に鳴らす
+                -- 1秒後にクールダウン音を鳴らす
                 task.delay(1, function()
                     playCooldownSound()
                 end)
 
-                -- 3秒後に再度発射可能に
+                -- 3秒待ったら撃てるように
                 task.wait(cooldown)
                 fireButton.Text = "💥"
                 canFire = true
             end
         end)
 
-        -- ツールを装備した時の処理
+        -- ツール装備時
         sniperTool.Equipped:Connect(function()
+            camera.CameraType = Enum.CameraType.Scriptable -- ここでScriptableに設定
             camera.FieldOfView = 20
             player.CameraMode = Enum.CameraMode.LockFirstPerson
-            camera.CameraMaxZoomDistance = 0
-            camera.CameraMinZoomDistance = 0
-            fireButton.Visible = true  -- ボタンを表示
-            plusLabel.Visible = true  -- 「＋」ラベルを表示
+            camera.CameraMaxZoomDistance = 10 -- 最大ズーム距離
+            camera.CameraMinZoomDistance = 0 -- 最小ズーム距離
+            fireButton.Visible = true
+            plusLabel.Visible = true
         end)
 
-        -- ツールを外した時の処理
+        -- ツール外した時
         sniperTool.Unequipped:Connect(function()
+            camera.CameraType = Enum.CameraType.Custom -- 通常モードに戻す
             camera.FieldOfView = 70
             player.CameraMode = Enum.CameraMode.Classic
-            camera.CameraMaxZoomDistance = 128
-            camera.CameraMinZoomDistance = 0
-            fireButton.Visible = false  -- ボタンを非表示
-            plusLabel.Visible = false  -- 「＋」ラベルを非表示
+            camera.CameraMaxZoomDistance = 128 -- 通常の最大ズーム距離
+            camera.CameraMinZoomDistance = 0 -- 通常の最小ズーム距離
+            fireButton.Visible = false
+            plusLabel.Visible = false
         end)
     end
 })
