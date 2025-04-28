@@ -1,4 +1,4 @@
-print("Githubさんちゃんとして")
+print("ロード開始")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -611,7 +611,7 @@ ToolTab:AddButton({
 
 --スナイパーツール
 ToolTab:AddButton({
-    Name = "Sniper Tool",
+    Name = "Sniper",
     Callback = function()
         print("Sniper Tool button pressed")
 
@@ -748,14 +748,29 @@ ToolTab:AddButton({
 
                         -- プレイヤーの体力を即座に0に設定して死亡させる
                         humanoid.Health = 0
+
+                        -- プレイヤーをフェードアウトさせる
+                        for _, part in pairs(character:GetChildren()) do
+                            if part:IsA("BasePart") then
+                                -- 透明度を0にしてフェードアウト
+                                local fadeOutTween = game:GetService("TweenService"):Create(
+                                    part,
+                                    TweenInfo.new(1, Enum.EasingStyle.Linear, Enum.EasingDirection.Out),
+                                    {Transparency = 1} -- 透明にする
+                                )
+                                fadeOutTween:Play()
+                            end
+                        end
+
+                        -- フェードアウト後にプレイヤーを削除
+                        task.delay(1, function()
+                            character:Destroy()
+                        end)
                     end
                     beam:Destroy() -- ビームを破壊
                     connection:Disconnect() -- コネクション解除
                 end
             end)
-
-            -- 3秒で自動消去
-            game:GetService("Debris"):AddItem(beam, 3)
 
             -- クールダウン終了後にボタン戻す
             task.delay(cooldown, function()
