@@ -665,10 +665,6 @@ ToolTab:AddButton({
         explosionButton.AutoButtonColor = false  -- マウスオーバー時に色が変わらないようにする
         explosionButton.Visible = false  -- 初期状態では非表示にする
         
-        -- 変数で元のズーム状態を保持
-        local originalMaxZoom = camera.CFrame.Position.Magnitude
-        local originalMinZoom = camera.CFrame.Position.Magnitude
-
         -- ツールを装備したときの処理
         sniperTool.Equipped:Connect(function()
             print("Sniper Tool Equipped")  -- デバッグ用のログ
@@ -699,9 +695,11 @@ ToolTab:AddButton({
 
             -- 三人称視点に戻す
             player.CameraMode = Enum.CameraMode.Classic
-            -- ツールを外した時に保存されたズーム設定を戻す
-            camera.CameraMaxZoomDistance = originalMaxZoom  -- 保存していた最大ズーム距離を適用
-            camera.CameraMinZoomDistance = originalMinZoom  -- 保存していた最小ズーム距離を適用
+            -- ツールを外した時に最大ズーム距離と最小ズーム距離を設定
+            camera.CameraMaxZoomDistance = 128  -- 最大ズーム距離を128に設定
+            camera.CameraMinZoomDistance = 20  -- 最小ズーム距離を0に設定
+            wait(0.5)
+            camera.CameraMinZoomDistance = 0  -- 最小ズーム距離を0に設定
         end)
 
         print("SniperToolがバックパックに追加されました。")
