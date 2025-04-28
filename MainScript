@@ -608,6 +608,125 @@ ToolTab:AddButton({
     end    
 })
 
+--スナイパーツール
+local player = game.Players.LocalPlayer
+local camera = workspace.CurrentCamera
+local playerGui = player:WaitForChild("PlayerGui")
+local backpack = player:WaitForChild("Backpack")
+
+-- 銃のスコープGUI作成（最初は非表示）
+local sniperGui = Instance.new("ScreenGui")
+sniperGui.Name = "SniperGui"
+sniperGui.Enabled = false
+sniperGui.Parent = playerGui
+
+local scopeImage = Instance.new("ImageLabel")
+scopeImage.Size = UDim2.new(1, 0, 1, 0)
+scopeImage.BackgroundTransparency = 1
+scopeImage.Image = "rbxassetid://18857150729" -- スコープ画像
+scopeImage.Parent = sniperGui
+
+-- 銃ツール作成
+local tool = Instance.new("Tool")
+tool.Name = "SniperGun"
+tool.RequiresHandle = true
+tool.Parent = backpack
+
+-- モデルの読み込み（完全クライアント側）
+local modelID = "rbxassetid://13522482473"  -- 銃のモデルIDに差し替え
+local sniperModel = game:GetService("InsertService"):LoadAsset(modelID)
+sniperModel.Parent = tool
+
+-- モデル内のHandleを自動で取得
+local handle = sniperModel:FindFirstChild("Handle") or sniperModel:FindFirstChildOfClass("Part")
+if handle then
+    tool.Handle = handle
+else
+    warn("Handleがモデルに見つかりません！")
+end
+
+-- 銃声サウンド
+local shootSound = Instance.new("Sound")
+shootSound.SoundId = "rbxassetid://1905367471" -- 銃声サウンドID
+shootSound.Volume = 1
+shootSound.Parent = tool
+
+-- ツール持った時の処理
+tool.Equipped:Connect(function()
+    sniperGui.Enabled = true
+    camera.FieldOfView = 30 -- ズームイン
+end)
+
+tool.Unequipped:Connect(function()
+    sniperGui.Enabled = false
+    camera.FieldOfView = 70 -- 通常FOV
+end)
+
+-- 銃を発射する関数
+local function Shoot()
+    shootSound:Play()
+
+    local origin = camera.CFrame.Position
+    local direction = camera.CFrame.LookVector * 500
+
+    local raycastParams = RaycastParams.new()
+    raycastParams.FilterDescendantsInstances = {player.Character}
+    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+    local result = workspace:Raycast(origin, direction, raycastParams)
+
+    -- ビームを飛ばす
+    local beam = Instance.new("Part")
+    beam.Anchored = true
+    beam.CanCollide = false
+    beam.Material = Enum.Material.Neon
+    beam.BrickColor = BrickColor.new("New Yeller")
+    beam.Size = Vector3.new(0.2, 0.2, (result and (result.Position - origin).Magnitude) or 500)
+    beam.CFrame = CFrame.new(origin, result and result.Position or (origin + direction)) * CFrame.new(0, 0, -beam.Size.Z/2)
+    beam.Parent = workspace
+
+    game:GetService("Debris"):AddItem(beam, 0.2)
+
+    -- プレイヤーに当たったら死んだように見せる
+    if result and result.Instance then
+        local hitChar = result.Instance:FindFirstAncestorOfClass("Model")
+        if hitChar then
+            local humanoid = hitChar:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid.PlatformStand = true
+                humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+            end
+        end
+    end
+end
+
+ToolTab:AddButton({
+    Name = "Sniper",
+    Callback = function()
+        print("Sniper button pressed")
+
+        -- 銃をバックパックに追加
+        tool.Parent = backpack
+        -- 銃がバックパックに追加された時、銃を持った状態にする
+        player.Character.Humanoid:EquipTool(tool)
+    end    
+})
+
+-- 半透明の黒色の丸いボタン作成 (銃を発射する)
+local shootButton = Instance.new("TextButton")
+shootButton.Size = UDim2.new(0, 100, 0, 100)
+shootButton.Position = UDim2.new(0.5, -50, 0.8, 0)
+shootButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+shootButton.BackgroundTransparency = 0.5
+shootButton.Text = "💥"  -- ボタンにアイコンを表示
+shootButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+shootButton.TextScaled = true
+shootButton.Parent = playerGui
+
+shootButton.MouseButton1Click:Connect(function()
+    Shoot()
+end)
+
 --==ここより下は別のタブになります==--
 
 local Players = game:GetService("Players")
