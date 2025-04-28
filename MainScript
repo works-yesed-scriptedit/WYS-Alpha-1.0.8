@@ -1,3 +1,4 @@
+--upd mode1
 print("ロード開始します")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
@@ -659,18 +660,26 @@ ToolTab:AddButton({
         textLabel.BackgroundTransparency = 1  -- 背景を透明にする
         textLabel.TextStrokeTransparency = 0.8  -- テキストのアウトラインの透明度（見やすさを調整）
 
+        -- 初期状態では「+」と円を非表示にしておく
+        textLabel.Visible = false
+        circleFrame.Visible = false
+
         -- FOVを変更し、スコープの「+」を表示する処理
         sniperTool.Equipped:Connect(function()
+            print("Sniper Tool Equipped")  -- デバッグ用のログ
             -- ツールが装備された時、FOVを20に設定
             camera.FieldOfView = 20
+            print("FOV changed to 20")  -- FOV変更のデバッグログ
             -- スコープの「+」と円を表示
             textLabel.Visible = true
             circleFrame.Visible = true
         end)
 
         sniperTool.Unequipped:Connect(function()
+            print("Sniper Tool Unequipped")  -- デバッグ用のログ
             -- ツールが外された時、FOVを70に戻す
             camera.FieldOfView = 70
+            print("FOV changed to 70")  -- FOV変更のデバッグログ
             -- スコープの「+」と円を非表示
             textLabel.Visible = false
             circleFrame.Visible = false
