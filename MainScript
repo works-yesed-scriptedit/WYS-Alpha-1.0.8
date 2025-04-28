@@ -1,4 +1,4 @@
-print("Loadingしてます")
+print("Loadingしてますよ")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -665,10 +665,44 @@ ToolTab:AddButton({
         explosionButton.AutoButtonColor = false  -- マウスオーバー時に色が変わらないようにする
         explosionButton.Visible = false  -- 初期状態では非表示にする
         
-        -- 変数で元のズーム状態を保持
-        local originalMaxZoom = camera.CFrame.Position.Magnitude
-        local originalMinZoom = camera.CFrame.Position.Magnitude
-
+        -- ビームエフェクトを作成する関数
+        local function createBeam()
+            -- ビームのパーツを作成
+            local beamPart = Instance.new("Part")
+            beamPart.Size = Vector3.new(1, 1, 50)  -- ビームのサイズ（長さを長くする）
+            beamPart.Shape = Enum.PartType.Cylinder
+            beamPart.Position = camera.CFrame.Position + camera.CFrame.LookVector * 5  -- 画面中央から少し前に出す
+            beamPart.Anchored = true
+            beamPart.CanCollide = false
+            beamPart.Material = Enum.Material.Neon
+            beamPart.Color = Color3.fromRGB(255, 255, 0)  -- 黄色いビーム
+            beamPart.Parent = workspace  -- ワークスペースに追加
+            
+            -- ビームが飛ぶ方向に移動させる
+            local targetPosition = camera.CFrame.Position + camera.CFrame.LookVector * 200  -- 画面中央から200の距離
+            local direction = (targetPosition - beamPart.Position).unit  -- ビームの進行方向を計算
+            local distance = (targetPosition - beamPart.Position).magnitude  -- 進行方向の距離
+            
+            -- Raycastで障害物をチェックする
+            local ray = workspace:Raycast(beamPart.Position, direction * distance)
+            
+            if ray then
+                -- 障害物に当たった場合、ビームの位置を更新して停止させる
+                beamPart.Size = Vector3.new(1, 1, ray.Distance)  -- ビームの長さを障害物までに調整
+                beamPart.CFrame = CFrame.new(beamPart.Position, ray.Position)  -- ビームを当たった場所に調整
+                -- ビームが障害物に当たったら削除
+                wait(0.1)  -- 少し待ってからビームを削除
+                beamPart:Destroy()
+            else
+                -- 障害物に当たらなかった場合は、そのまま進む
+                local beamTween = game:GetService("TweenService"):Create(beamPart, TweenInfo.new(1), {Position = beamPart.Position + direction * distance})
+                beamTween:Play()
+                beamTween.Completed:Connect(function()
+                    beamPart:Destroy()  -- ビームが終了したら削除
+                end)
+            end
+        end
+        
         -- ツールを装備したときの処理
         sniperTool.Equipped:Connect(function()
             print("Sniper Tool Equipped")  -- デバッグ用のログ
@@ -682,6 +716,7 @@ ToolTab:AddButton({
 
             -- 一人称視点に切り替え
             player.CameraMode = Enum.CameraMode.LockFirstPerson
+            camera.CameraType = Enum.CameraType.Scriptable  -- 一人称視点にするため、カメラタイプをScriptableに設定
             camera.CameraMaxZoomDistance = 0  -- 最大ズーム距離を0に設定（カメラが最も近い位置に固定）
             camera.CameraMinZoomDistance = 0  -- 最小ズーム距離を0に設定（カメラが最も近い位置に固定）
         end)
@@ -699,9 +734,15 @@ ToolTab:AddButton({
 
             -- 三人称視点に戻す
             player.CameraMode = Enum.CameraMode.Classic
-            -- ツールを外した時に保存されたズーム設定を戻す
-            camera.CameraMaxZoomDistance = originalMaxZoom  -- 保存していた最大ズーム距離を適用
-            camera.CameraMinZoomDistance = originalMinZoom  -- 保存していた最小ズーム距離を適用
+            camera.CameraType = Enum.CameraType.Custom  -- 三人称視点に戻すため、カメラタイプをCustomに設定
+            -- ツールを外した時に最大ズーム距離と最小ズーム距離を設定
+            camera.CameraMaxZoomDistance = 128  -- 最大ズーム距離を128に設定
+            camera.CameraMinZoomDistance = 0  -- 最小ズーム距離を0に設定
+        end)
+
+        -- ビームを発射する処理（ボタンが押されたら）
+        explosionButton.MouseButton1Click:Connect(function()
+            createBeam()  -- ビームを作成
         end)
 
         print("SniperToolがバックパックに追加されました。")
