@@ -1,4 +1,4 @@
-print("Now Loading..")
+print("Now Loading.")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -133,8 +133,15 @@ local function updateFriendInfo()
         end
     end
 
-    -- 総フレンド数
-    local totalFriendsCount = LocalPlayer.FriendCount or 0
+    -- フレンドリストを取得して、フレンド数を取得
+    local totalFriendsCount = 0
+    local successFriends, friendsList = pcall(function()
+        return LocalPlayer:GetFriends()
+    end)
+
+    if successFriends and friendsList then
+        totalFriendsCount = #friendsList
+    end
 
     -- オフラインフレンド数
     local offlineCount = totalFriendsCount - onlineCount
