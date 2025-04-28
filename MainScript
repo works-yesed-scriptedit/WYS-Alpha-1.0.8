@@ -1,4 +1,4 @@
-print("ロード中ですよ")
+print("ロード、良いお知らせきた〜")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -611,164 +611,125 @@ ToolTab:AddButton({
 
 --スナイパーツール
 ToolTab:AddButton({
-    Name = "Sniper Tool",  -- ボタンの名前
-    Callback = function()  -- ボタンが押された時の処理
+    Name = "Sniper Tool",
+    Callback = function()
         print("Sniper Tool button pressed")
-        
-        -- クライアント側でツールを作成してバックパックに追加
+
         local player = game.Players.LocalPlayer
-        local camera = game.Workspace.CurrentCamera
-        
-        -- ツールを作成
+        local camera = workspace.CurrentCamera
+
+        -- ツール作成
         local sniperTool = Instance.new("Tool")
         sniperTool.Name = "SniperTool"
-        
-        -- ツールのグリップを作成
+
         local handle = Instance.new("Part")
         handle.Name = "Handle"
-        handle.Size = Vector3.new(1, 5, 1)  -- グリップのサイズ
+        handle.Size = Vector3.new(1, 5, 1)
         handle.Anchored = false
         handle.CanCollide = false
-        handle.Parent = sniperTool  -- ツールにグリップを設定
-        
-        -- ツールをバックパックに入れる
+        handle.Parent = sniperTool
+
         sniperTool.Parent = player.Backpack
-        
-        -- 画面に表示する「＋」と「💥」ボタンを作成
+
+        -- GUI作成
         local screenGui = Instance.new("ScreenGui")
         screenGui.Parent = player.PlayerGui
-        
-        -- 「＋」テキストラベル
+
+        -- ＋マーク
         local plusLabel = Instance.new("TextLabel")
         plusLabel.Parent = screenGui
-        plusLabel.Size = UDim2.new(0, 80, 0, 80)  -- 「＋」のサイズ
-        plusLabel.Position = UDim2.new(0.5, -40, 0.5, -40)  -- 画面中央に配置
-        plusLabel.Text = "+"  -- 「＋」を設定
-        plusLabel.TextSize = 60  -- テキストサイズを大きくする
-        plusLabel.TextColor3 = Color3.fromRGB(50, 50, 50)  -- テキストの色（黒に近い灰色）
-        plusLabel.BackgroundTransparency = 1  -- 背景を透明にする
-        plusLabel.TextStrokeTransparency = 0.8  -- テキストのアウトラインの透明度（見やすさを調整）
-        plusLabel.Visible = false  -- 初期状態では非表示にする
-        
-        -- 丸い形の「💥」ボタン
+        plusLabel.Size = UDim2.new(0, 80, 0, 80)
+        plusLabel.Position = UDim2.new(0.5, -40, 0.5, -40)
+        plusLabel.Text = "+"
+        plusLabel.TextSize = 60
+        plusLabel.TextColor3 = Color3.fromRGB(50, 50, 50)
+        plusLabel.BackgroundTransparency = 1
+        plusLabel.TextStrokeTransparency = 0.8
+        plusLabel.Visible = false
+
+        -- 💥ボタン
         local explosionButton = Instance.new("TextButton")
         explosionButton.Parent = screenGui
-        explosionButton.Size = UDim2.new(0, 50, 0, 50)  -- ボタンのサイズ
-        explosionButton.Position = UDim2.new(0, 20, 0, 20)  -- 左上に配置
-        explosionButton.Text = "💥"  -- ボタンに表示するテキスト
-        explosionButton.TextSize = 30  -- テキストサイズ
-        explosionButton.TextColor3 = Color3.fromRGB(255, 255, 255)  -- テキストの色（白）
-        explosionButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)  -- 背景色（灰色）
-        explosionButton.BackgroundTransparency = 0.5  -- 半透明にする
-        explosionButton.BorderSizePixel = 0  -- ボーダーなし
-        explosionButton.AnchorPoint = Vector2.new(0, 0)  -- 左上に固定
-        explosionButton.AutoButtonColor = false  -- マウスオーバー時に色が変わらないようにする
-        explosionButton.Visible = false  -- 初期状態では非表示にする
-        
-        -- 変数で元のズーム状態を保持
-        local originalMaxZoom = camera.CFrame.Position.Magnitude
-        local originalMinZoom = camera.CFrame.Position.Magnitude
-        
-        -- クールダウン時間の設定
+        explosionButton.Size = UDim2.new(0, 50, 0, 50)
+        explosionButton.Position = UDim2.new(0, 50, 0, 50)
+        explosionButton.Text = "💥"
+        explosionButton.TextSize = 30
+        explosionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        explosionButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        explosionButton.BackgroundTransparency = 0.5
+        explosionButton.BorderSizePixel = 0
+        explosionButton.AnchorPoint = Vector2.new(0, 0)
+        explosionButton.AutoButtonColor = false
+        explosionButton.Visible = false
+
+        -- クールダウン管理
         local lastFireTime = 0
-        local cooldown = 3 -- 3秒のクールダウン
-        
-        -- ビームを発射する関数
-        local function createBeam()
-            -- 現在の時間を取得してクールダウンの確認
+        local cooldown = 3 -- 3秒
+
+        -- ビーム発射処理
+        local function fireBeam()
             local currentTime = tick()
             if currentTime - lastFireTime < cooldown then
-                return  -- クールダウン中の場合はビームを発射しない
+                return
             end
-            lastFireTime = currentTime  -- 最後にビームを発射した時間を更新
-            
-            -- ビームのパーツを作成
+            lastFireTime = currentTime
+
+            -- ボタンアニメーション（押した感）
+            explosionButton.Position = UDim2.new(0, 52, 0, 52)
+            task.wait(0.05)
+            explosionButton.Position = UDim2.new(0, 50, 0, 50)
+
+            -- ビーム発射
+            local origin = camera.CFrame.Position
+            local direction = camera.CFrame.LookVector * 1000
+
+            local rayResult = workspace:Raycast(origin, direction)
+            local hitPosition = rayResult and rayResult.Position or (origin + direction)
+
             local beamPart = Instance.new("Part")
-            beamPart.Size = Vector3.new(1, 1, 200)  -- ビームのサイズ（さらに細長く、奥に長く）
-            beamPart.Shape = Enum.PartType.Cylinder
-            beamPart.Position = camera.CFrame.Position + camera.CFrame.LookVector * 5 - Vector3.new(0, 2, 0)  -- 発射位置を少し下に設定
             beamPart.Anchored = true
             beamPart.CanCollide = false
             beamPart.Material = Enum.Material.Neon
-            beamPart.Color = Color3.fromRGB(255, 255, 0)  -- 黄色いビーム
-            beamPart.Parent = workspace  -- ワークスペースに追加
-            
-            -- ビームが飛ぶ方向に移動させる
-            local targetPosition = camera.CFrame.Position + camera.CFrame.LookVector * 200  -- 画面中央から200の距離
-            local direction = (targetPosition - beamPart.Position).unit  -- ビームの進行方向を計算
-            local distance = (targetPosition - beamPart.Position).magnitude  -- 進行方向の距離
-            
-            -- Raycastで障害物をチェックする
-            local ray = workspace:Raycast(beamPart.Position, direction * distance)
-            
-            if ray then
-                -- 障害物に当たった場合、ビームの位置を更新して停止させる
-                beamPart.Size = Vector3.new(1, 1, ray.Distance)  -- ビームの長さを障害物までに調整
-                beamPart.CFrame = CFrame.new(beamPart.Position, ray.Position)  -- ビームを当たった場所に調整
-                -- ビームが障害物に当たったら削除
-                wait(0.1)  -- 少し待ってからビームを削除
-                beamPart:Destroy()
-            else
-                -- 障害物に当たらなかった場合は、そのまま進む
-                local beamTween = game:GetService("TweenService"):Create(beamPart, TweenInfo.new(0.5), {Position = beamPart.Position + direction * distance})
-                beamTween:Play()
-                beamTween.Completed:Connect(function()
-                    beamPart:Destroy()  -- ビームが終了したら削除
-                end)
-            end
+            beamPart.Color = Color3.fromRGB(255, 255, 0)
+            beamPart.Size = Vector3.new(0.1, 0.1, (origin - hitPosition).Magnitude)
+            beamPart.CFrame = CFrame.new(origin, hitPosition) * CFrame.new(0, 0, -beamPart.Size.Z / 2)
+            beamPart.Parent = workspace
 
-            -- 3秒後にビームを消す
-            wait(3)
-            if beamPart and beamPart.Parent then
-                beamPart:Destroy()  -- 3秒後に消す
-            end
+            -- 3秒後に消去
+            game:GetService("Debris"):AddItem(beamPart, 3)
         end
 
-        -- ボタンのアニメーション（押した時にへこむ）
-        local function animateButton()
-            local originalSize = explosionButton.Size
-            explosionButton.Size = UDim2.new(0, 45, 0, 45)  -- ボタンが少しへこむ
-            wait(0.1)
-            explosionButton.Size = originalSize  -- 元のサイズに戻す
-        end
+        explosionButton.MouseButton1Click:Connect(fireBeam)
 
-        -- ボタンがクリックされた時の処理
-        explosionButton.MouseButton1Click:Connect(function()
-            animateButton()  -- ボタンアニメーション
-            createBeam()  -- ビームを発射
-        end)
+        -- カメラズーム保存
+        local savedMinZoom = player.CameraMinZoomDistance
+        local savedMaxZoom = player.CameraMaxZoomDistance
 
-        -- ツールを装備したときの処理
+        -- 装備した時
         sniperTool.Equipped:Connect(function()
-            print("Sniper Tool Equipped")  -- デバッグ用のログ
-            -- ツールが装備された時、FOVを20に設定
+            print("Sniper Tool Equipped")
             camera.FieldOfView = 20
-            print("FOV changed to 20")  -- FOV変更のデバッグログ
-            -- 丸いボタンを表示
             explosionButton.Visible = true
-            -- 「＋」を表示
             plusLabel.Visible = true
 
-            -- 一人称視点に切り替え
             player.CameraMode = Enum.CameraMode.LockFirstPerson
-            camera.CameraMaxZoomDistance = 0  -- 最大ズーム距離を0に設定（カメラが最も近い位置に固定）
-            camera.CameraMinZoomDistance = 0  -- 最小ズーム距離を0に設定（カメラが最も近い位置に固定）
+            player.CameraMinZoomDistance = 0
+            player.CameraMaxZoomDistance = 0
         end)
 
-        -- ツールを外したときの処理
+        -- 外した時
         sniperTool.Unequipped:Connect(function()
-            print("Sniper Tool Unequipped")  -- デバッグ用のログ
-            -- ツールが外された時、FOVを70に戻す
+            print("Sniper Tool Unequipped")
             camera.FieldOfView = 70
-            print("FOV changed to 70")  -- FOV変更のデバッグログ
-            -- 丸いボタンを非表示
             explosionButton.Visible = false
-            -- 「＋」を非表示
             plusLabel.Visible = false
 
-            -- 三人称視点に戻す
             player.CameraMode = Enum.CameraMode.Classic
+            player.CameraMinZoomDistance = 0
+            player.CameraMaxZoomDistance = 128
         end)
+
+        print("SniperToolがバックパックに追加されました。")
     end
 })
 
