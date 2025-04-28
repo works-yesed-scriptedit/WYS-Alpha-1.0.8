@@ -1,4 +1,4 @@
-print("ロード中です")
+print("ロード中ですよ")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -668,9 +668,20 @@ ToolTab:AddButton({
         -- 変数で元のズーム状態を保持
         local originalMaxZoom = camera.CFrame.Position.Magnitude
         local originalMinZoom = camera.CFrame.Position.Magnitude
-
+        
+        -- クールダウン時間の設定
+        local lastFireTime = 0
+        local cooldown = 3 -- 3秒のクールダウン
+        
         -- ビームを発射する関数
         local function createBeam()
+            -- 現在の時間を取得してクールダウンの確認
+            local currentTime = tick()
+            if currentTime - lastFireTime < cooldown then
+                return  -- クールダウン中の場合はビームを発射しない
+            end
+            lastFireTime = currentTime  -- 最後にビームを発射した時間を更新
+            
             -- ビームのパーツを作成
             local beamPart = Instance.new("Part")
             beamPart.Size = Vector3.new(1, 1, 200)  -- ビームのサイズ（さらに細長く、奥に長く）
@@ -713,6 +724,20 @@ ToolTab:AddButton({
             end
         end
 
+        -- ボタンのアニメーション（押した時にへこむ）
+        local function animateButton()
+            local originalSize = explosionButton.Size
+            explosionButton.Size = UDim2.new(0, 45, 0, 45)  -- ボタンが少しへこむ
+            wait(0.1)
+            explosionButton.Size = originalSize  -- 元のサイズに戻す
+        end
+
+        -- ボタンがクリックされた時の処理
+        explosionButton.MouseButton1Click:Connect(function()
+            animateButton()  -- ボタンアニメーション
+            createBeam()  -- ビームを発射
+        end)
+
         -- ツールを装備したときの処理
         sniperTool.Equipped:Connect(function()
             print("Sniper Tool Equipped")  -- デバッグ用のログ
@@ -743,30 +768,10 @@ ToolTab:AddButton({
 
             -- 三人称視点に戻す
             player.CameraMode = Enum.CameraMode.Classic
-            -- ツールを外した時に保存されたズーム設定を戻す
-            camera.CameraMaxZoomDistance = originalMaxZoom  -- 保存していた最大ズーム距離を適用
-            camera.CameraMinZoomDistance = originalMinZoom  -- 保存していた最小ズーム距離を適用
         end)
-
-        -- ビームを発射する処理（ボタンが押されたら）
-        explosionButton.MouseButton1Click:Connect(function()
-            -- ボタンのアニメーション：押した時に一瞬へこむ
-            local originalPosition = explosionButton.Position
-            local tweenIn = game:GetService("TweenService"):Create(explosionButton, TweenInfo.new(0.1), {Position = UDim2.new(0, 15, 0, 15)})
-            local tweenOut = game:GetService("TweenService"):Create(explosionButton, TweenInfo.new(0.1), {Position = originalPosition})
-            
-            tweenIn:Play()
-            tweenIn.Completed:Connect(function()
-                tweenOut:Play()
-            end)
-            
-            -- ビームを作成
-            createBeam()  -- ビームを作成
-        end)
-
-        print("SniperToolがバックパックに追加されました。")
     end
 })
+
 --==ここより下は別のタブになります==--
 
 local Players = game:GetService("Players")
