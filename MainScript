@@ -1,4 +1,4 @@
-print("Now Loading.")
+print("Now Loading")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -86,6 +86,7 @@ HomeTab:AddButton({
         setclipboard(linkToCopy)  -- リンクをクリップボードにコピー
     end    
 })
+
 -- 右下エリア「Friend Information」
 HomeTab:AddSection({
     Name = "Friend Information"
@@ -110,11 +111,11 @@ local function updateFriendInfo()
     -- サーバー内にフレンドがいるかチェック
     for _, player in ipairs(game.Players:GetPlayers()) do
         if player ~= LocalPlayer then
-            pcall(function()
-                if LocalPlayer:IsFriendsWith(player.UserId) then
-                    inServer = true
-                end
-            end)
+            -- ローカルプレイヤーがそのプレイヤーとフレンドかどうかを確認
+            if LocalPlayer:IsFriendsWith(player.UserId) then
+                inServer = true
+                break  -- フレンドが見つかったら終了
+            end
         end
     end
 
@@ -129,7 +130,7 @@ local function updateFriendInfo()
 
     for _, friend in ipairs(onlineFriends) do
         if friend.IsOnline then
-            onlineCount += 1
+            onlineCount = onlineCount + 1
         end
     end
 
