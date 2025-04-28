@@ -641,7 +641,8 @@ ToolTab:AddButton({
         imageLabel.Parent = screenGui
         imageLabel.Size = UDim2.new(1, 0, 1, 0)  -- 画面いっぱいに表示
         imageLabel.Position = UDim2.new(0, 0, 0, 0)
-        imageLabel.Image = "rbxassetid://10675132"  -- 画像のIDを指定
+        imageLabel.Image = "rbxassetid://11790316545"  -- 画像のIDを指定
+        imageLabel.Visible = false  -- 初期設定で非表示
 
         -- FOVを変更し、画像を表示する処理
         sniperTool.Equipped:Connect(function()
@@ -661,6 +662,7 @@ ToolTab:AddButton({
         print("SniperToolがバックパックに追加されました。")
     end
 })
+
 --==ここより下は別のタブになります==--
 
 local Players = game:GetService("Players")
