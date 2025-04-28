@@ -1,4 +1,4 @@
-print("ロード始め")
+print("ロード開始")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -611,7 +611,7 @@ ToolTab:AddButton({
 
 --スナイパーツール
 ToolTab:AddButton({
-    Name = "Sniper",
+    Name = "Sniper Tool",
     Callback = function()
         print("Sniper Tool button pressed")
 
@@ -706,8 +706,13 @@ ToolTab:AddButton({
             beam.Anchored = false
             beam.CanCollide = false
             beam.CFrame = camera.CFrame * CFrame.new(0, 0, -5) -- 発射位置をカメラの前方に変更（自分に当たらないように調整）
-            beam.Velocity = camera.CFrame.LookVector * 300 -- 速さ
             beam.Parent = workspace
+
+            -- 直線的に飛ばすために BodyVelocity を使用
+            local bodyVelocity = Instance.new("BodyVelocity")
+            bodyVelocity.MaxForce = Vector3.new(5000, 5000, 5000) -- 最大力を設定
+            bodyVelocity.Velocity = camera.CFrame.LookVector * 300 -- 速さ
+            bodyVelocity.Parent = beam
 
             -- ビームが何かに当たったら即死
             local connection
