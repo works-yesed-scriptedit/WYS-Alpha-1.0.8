@@ -673,9 +673,9 @@ ToolTab:AddButton({
         local function createBeam()
             -- ビームのパーツを作成
             local beamPart = Instance.new("Part")
-            beamPart.Size = Vector3.new(1, 1, 50)  -- ビームのサイズ（長さを長くする）
+            beamPart.Size = Vector3.new(1, 1, 100)  -- ビームのサイズ（細長く、奥に長く）
             beamPart.Shape = Enum.PartType.Cylinder
-            beamPart.Position = camera.CFrame.Position + camera.CFrame.LookVector * 5  -- 画面中央から少し前に出す
+            beamPart.Position = camera.CFrame.Position + camera.CFrame.LookVector * 5 - Vector3.new(0, 2, 0)  -- 発射位置を少し下に設定
             beamPart.Anchored = true
             beamPart.CanCollide = false
             beamPart.Material = Enum.Material.Neon
