@@ -633,21 +633,34 @@ ToolTab:AddButton({
         -- ツールをバックパックに入れる
         sniperTool.Parent = player.Backpack
         
-        -- FOVを変更する処理
+        -- 画面いっぱいに表示する画像の作成
+        local screenGui = Instance.new("ScreenGui")
+        screenGui.Parent = player.PlayerGui
+        
+        local imageLabel = Instance.new("ImageLabel")
+        imageLabel.Parent = screenGui
+        imageLabel.Size = UDim2.new(1, 0, 1, 0)  -- 画面いっぱいに表示
+        imageLabel.Position = UDim2.new(0, 0, 0, 0)
+        imageLabel.Image = "rbxassetid://画像ID"  -- 画像のIDを指定
+
+        -- FOVを変更し、画像を表示する処理
         sniperTool.Equipped:Connect(function()
             -- ツールが装備された時、FOVを20に設定
             camera.FieldOfView = 20
+            -- 画像を表示
+            imageLabel.Visible = true
         end)
 
         sniperTool.Unequipped:Connect(function()
             -- ツールが外された時、FOVを70に戻す
             camera.FieldOfView = 70
+            -- 画像を非表示
+            imageLabel.Visible = false
         end)
 
         print("SniperToolがバックパックに追加されました。")
     end
 })
-
 --==ここより下は別のタブになります==--
 
 local Players = game:GetService("Players")
