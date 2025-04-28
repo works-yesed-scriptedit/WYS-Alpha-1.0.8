@@ -1,4 +1,4 @@
---スクリプトをアップデート1
+--スクリプトをアップデート2
 print("ロード開始!")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
@@ -675,7 +675,7 @@ local selectedPlayerName = nil
 --タブの作成
 local TeleportTab = Window:MakeTab({
 	Name = "Teleport Menu",
-	Icon = "rbxassetid://4483345998",
+	Icon = "rbxassetid://6105326",
 	PremiumOnly = false
 })
 
