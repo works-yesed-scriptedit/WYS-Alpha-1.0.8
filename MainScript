@@ -1,4 +1,4 @@
-print("ロード開始")
+print("ロード始め")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -611,7 +611,7 @@ ToolTab:AddButton({
 
 --スナイパーツール
 ToolTab:AddButton({
-    Name = "Sniper Tool",
+    Name = "Sniper",
     Callback = function()
         print("Sniper Tool button pressed")
 
@@ -705,7 +705,7 @@ ToolTab:AddButton({
             beam.BrickColor = BrickColor.new("Bright yellow")
             beam.Anchored = false
             beam.CanCollide = false
-            beam.CFrame = camera.CFrame * CFrame.new(0, 0, -2) -- 発射位置をカメラの前方に変更
+            beam.CFrame = camera.CFrame * CFrame.new(0, 0, -5) -- 発射位置をカメラの前方に変更（自分に当たらないように調整）
             beam.Velocity = camera.CFrame.LookVector * 300 -- 速さ
             beam.Parent = workspace
 
@@ -715,7 +715,23 @@ ToolTab:AddButton({
                 if hit and hit.Parent:FindFirstChild("Humanoid") then
                     local humanoid = hit.Parent.Humanoid
                     if humanoid then
-                        -- 健康を即座に0に設定して死亡させる
+                        -- プレイヤーの身体をバラバラにする
+                        local character = hit.Parent
+                        for _, part in pairs(character:GetChildren()) do
+                            if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+                                -- 部品を飛ばす
+                                local force = Instance.new("BodyVelocity")
+                                force.MaxForce = Vector3.new(5000, 5000, 5000)
+                                force.Velocity = Vector3.new(math.random(-100, 100), math.random(100, 200), math.random(-100, 100))
+                                force.Parent = part
+                                game:GetService("Debris"):AddItem(force, 1) -- 1秒後にForceを消去
+
+                                -- 部品を数秒後に消す
+                                game:GetService("Debris"):AddItem(part, 5) -- 5秒後に消す
+                            end
+                        end
+
+                        -- プレイヤーの体力を即座に0に設定して死亡させる
                         humanoid.Health = 0
                     end
                     beam:Destroy() -- ビームを破壊
