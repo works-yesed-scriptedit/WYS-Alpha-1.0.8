@@ -1,4 +1,4 @@
-print("Now Loading...")
+print("Now Loading..")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -119,11 +119,12 @@ local function updateFriendInfo()
         end
     end
 
-    -- オンラインフレンド数取得
+    -- オンラインフレンド数を手動でカウント
     local success, onlineFriends = pcall(function()
         return LocalPlayer:GetFriendsOnline()
     end)
 
+    -- エラーチェック
     if not success then
         onlineFriends = {}
     end
@@ -140,6 +141,7 @@ local function updateFriendInfo()
         return LocalPlayer:GetFriends()
     end)
 
+    -- エラーチェック
     if successFriends and friendsList then
         totalFriendsCount = #friendsList
     end
