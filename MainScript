@@ -1,4 +1,4 @@
-print("ロード開始してますよ！〜")
+print("ロード開始してますよ〜")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -674,6 +674,11 @@ ToolTab:AddButton({
             explosionButton.Visible = true
             -- 「＋」を表示
             plusLabel.Visible = true
+
+            -- 一人称視点に切り替え
+            player.CameraMode = Enum.CameraMode.LockFirstPerson
+            player.CameraMaxZoomDistance = 0  -- 最大ズーム距離を0に設定（カメラが最も近い位置に固定）
+            player.CameraMinZoomDistance = 0  -- 最小ズーム距離を0に設定（カメラが最も近い位置に固定）
         end)
 
         -- ツールを外したときの処理
@@ -686,6 +691,11 @@ ToolTab:AddButton({
             explosionButton.Visible = false
             -- 「＋」を非表示
             plusLabel.Visible = false
+
+            -- 三人称視点に戻す
+            player.CameraMode = Enum.CameraMode.Classic
+            player.CameraMaxZoomDistance = 128  -- 最大ズーム距離を戻す
+            player.CameraMinZoomDistance = 0  -- 最小ズーム距離も0に設定
         end)
 
         print("SniperToolがバックパックに追加されました。")
