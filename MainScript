@@ -1,4 +1,4 @@
-print("ロード開始してますよ〜")
+print("ロード開始してますよ")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -633,47 +633,48 @@ ToolTab:AddButton({
         -- ツールをバックパックに入れる
         sniperTool.Parent = player.Backpack
         
-        -- 画面に表示するTextLabel（「+」）を作成
+        -- 画面に表示する「💥」ボタンを作成
         local screenGui = Instance.new("ScreenGui")
         screenGui.Parent = player.PlayerGui
         
-        -- 「+」のテキスト
-        local plusLabel = Instance.new("TextLabel")
-        plusLabel.Parent = screenGui
-        plusLabel.Size = UDim2.new(0, 80, 0, 80)  -- 「+」のサイズを少し大きくする
-        plusLabel.Position = UDim2.new(0.5, -40, 0.5, -40)  -- 画面中央に配置
-        plusLabel.Text = "+"  -- 「+」を設定
-        plusLabel.TextSize = 60  -- テキストサイズを大きくする
-        plusLabel.TextColor3 = Color3.fromRGB(50, 50, 50)  -- テキストの色（黒に近い灰色）
-        plusLabel.BackgroundTransparency = 1  -- 背景を透明にする
-        plusLabel.TextStrokeTransparency = 0.8  -- テキストのアウトラインの透明度（見やすさを調整）
+        -- 丸い形の「💥」ボタン
+        local explosionButton = Instance.new("TextButton")
+        explosionButton.Parent = screenGui
+        explosionButton.Size = UDim2.new(0, 50, 0, 50)  -- ボタンのサイズ
+        explosionButton.Position = UDim2.new(1, -70, 1, -70)  -- 右下に配置
+        explosionButton.Text = "💥"  -- ボタンに表示するテキスト
+        explosionButton.TextSize = 30  -- テキストサイズ
+        explosionButton.TextColor3 = Color3.fromRGB(255, 255, 255)  -- テキストの色（白）
+        explosionButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)  -- 背景色（灰色）
+        explosionButton.BackgroundTransparency = 0.5  -- 半透明にする
+        explosionButton.BorderSizePixel = 0  -- ボーダーなし
+        explosionButton.AnchorPoint = Vector2.new(1, 1)  -- 右下に固定
+        explosionButton.AutoButtonColor = false  -- マウスオーバー時に色が変わらないようにする
+        explosionButton.Visible = false  -- 初期状態では非表示にする
 
-        -- 初期状態では「+」を非表示にしておく
-        plusLabel.Visible = false
-
-        -- FOVを変更し、スコープの「+」を表示する処理
+        -- ツールを装備したときの処理
         sniperTool.Equipped:Connect(function()
             print("Sniper Tool Equipped")  -- デバッグ用のログ
             -- ツールが装備された時、FOVを20に設定
             camera.FieldOfView = 20
             print("FOV changed to 20")  -- FOV変更のデバッグログ
-            -- スコープの「+」を表示
-            plusLabel.Visible = true
+            -- 丸いボタンを表示
+            explosionButton.Visible = true
         end)
 
+        -- ツールを外したときの処理
         sniperTool.Unequipped:Connect(function()
             print("Sniper Tool Unequipped")  -- デバッグ用のログ
             -- ツールが外された時、FOVを70に戻す
             camera.FieldOfView = 70
             print("FOV changed to 70")  -- FOV変更のデバッグログ
-            -- スコープの「+」を非表示
-            plusLabel.Visible = false
+            -- 丸いボタンを非表示
+            explosionButton.Visible = false
         end)
 
         print("SniperToolがバックパックに追加されました。")
     end
 })
-
 --==ここより下は別のタブになります==--
 
 local Players = game:GetService("Players")
