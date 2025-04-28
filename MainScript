@@ -707,6 +707,7 @@ ToolTab:AddButton({
         print("SniperToolがバックパックに追加されました。")
     end
 })
+
 --==ここより下は別のタブになります==--
 
 local Players = game:GetService("Players")
