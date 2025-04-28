@@ -1,4 +1,4 @@
-print("Loading")
+print("あ")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -665,10 +665,8 @@ ToolTab:AddButton({
         -- クールタイム制御用
         local canFire = true
         local cooldown = 3
-        local cooldownSoundId = "rbxassetid://138084889" -- クールダウン用音のID
-        local fireSoundId = "rbxassetid://1905367471"  -- 発射用音のID
+        local cooldownSoundId = "rbxassetid://YOUR_SOUND_ID" -- あなたの用意した音にして！
 
-        -- クールタイム音を再生
         local function playCooldownSound()
             local sound = Instance.new("Sound")
             sound.SoundId = cooldownSoundId
@@ -680,22 +678,10 @@ ToolTab:AddButton({
             end)
         end
 
-        -- 発射音を再生
-        local function playFireSound()
-            local sound = Instance.new("Sound")
-            sound.SoundId = fireSoundId
-            sound.Volume = 1
-            sound.Parent = player.PlayerGui
-            sound:Play()
-            sound.Ended:Connect(function()
-                sound:Destroy()
-            end)
-        end
-
         local function fireBeam()
             local beam = Instance.new("Part")
             beam.Size = Vector3.new(0.3, 0.3, 100) -- 細く長く
-            beam.CFrame = camera.CFrame * CFrame.new(0, -0.2, -1) -- 発射位置の微調整
+            beam.CFrame = camera.CFrame * CFrame.new(0, -0.2, -50)
             beam.Color = Color3.new(1, 1, 0)
             beam.Anchored = true
             beam.CanCollide = false
@@ -713,8 +699,7 @@ ToolTab:AddButton({
             if result then
                 local hitPart = result.Instance
                 if hitPart and hitPart.Parent:FindFirstChild("Humanoid") then
-                    -- 即死処理
-                    hitPart.Parent.Humanoid.Health = 0
+                    hitPart.Parent.Humanoid.Health = 0 -- 即死っぽく
                 end
             end
 
@@ -726,23 +711,13 @@ ToolTab:AddButton({
             if canFire then
                 canFire = false
 
-                -- 発射音を鳴らす
-                playFireSound()
-
                 -- ボタン押したらビーム発射
                 fireBeam()
 
                 -- ボタンアニメーション
-                local tweenService = game:GetService("TweenService")
-                local tweenInfo = TweenInfo.new(0.05, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out)
-                local goal = {Position = fireButton.Position + UDim2.new(0, 2, 0, 2)}
-                local tween = tweenService:Create(fireButton, tweenInfo, goal)
-                tween:Play()
-                tween.Completed:Connect(function()
-                    local goalBack = {Position = fireButton.Position - UDim2.new(0, 2, 0, 2)}
-                    local tweenBack = tweenService:Create(fireButton, tweenInfo, goalBack)
-                    tweenBack:Play()
-                end)
+                fireButton.Position = fireButton.Position + UDim2.new(0, 2, 0, 2)
+                task.wait(0.05)
+                fireButton.Position = fireButton.Position - UDim2.new(0, 2, 0, 2)
 
                 -- ローディング中
                 fireButton.Text = "Loading"
@@ -761,22 +736,20 @@ ToolTab:AddButton({
 
         -- ツール装備時
         sniperTool.Equipped:Connect(function()
-            camera.CameraType = Enum.CameraType.Scriptable -- ここでScriptableに設定
             camera.FieldOfView = 20
             player.CameraMode = Enum.CameraMode.LockFirstPerson
-            camera.CameraMaxZoomDistance = 10 -- 最大ズーム距離
-            camera.CameraMinZoomDistance = 0 -- 最小ズーム距離
+            camera.CameraMaxZoomDistance = 0
+            camera.CameraMinZoomDistance = 0
             fireButton.Visible = true
             plusLabel.Visible = true
         end)
 
         -- ツール外した時
         sniperTool.Unequipped:Connect(function()
-            camera.CameraType = Enum.CameraType.Custom -- 通常モードに戻す
             camera.FieldOfView = 70
             player.CameraMode = Enum.CameraMode.Classic
-            camera.CameraMaxZoomDistance = 128 -- 通常の最大ズーム距離
-            camera.CameraMinZoomDistance = 0 -- 通常の最小ズーム距離
+            camera.CameraMaxZoomDistance = 128
+            camera.CameraMinZoomDistance = 0
             fireButton.Visible = false
             plusLabel.Visible = false
         end)
