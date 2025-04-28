@@ -1,4 +1,4 @@
-print("Githubさんちゃんと！")
+print("Githubさんちゃんとして")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -722,18 +722,20 @@ ToolTab:AddButton({
                     if humanoid then
                         local character = hit.Parent
 
-                        -- 部品を飛ばす
+                        -- Explosionを使って部品を爆発させる
+                        local explosion = Instance.new("Explosion")
+                        explosion.Position = hit.Parent.HumanoidRootPart.Position
+                        explosion.BlastRadius = 10 -- 爆発の半径
+                        explosion.BlastPressure = 5000 -- 爆発の圧力
+                        explosion.Parent = workspace
+
+                        -- 部品をバラバラにするためのランダムな力を加える
                         for _, part in pairs(character:GetChildren()) do
                             if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-                                -- 部品にランダムな力を加える
-                                local force = Instance.new("BodyVelocity")
-                                force.MaxForce = Vector3.new(5000, 5000, 5000)
-                                force.Velocity = Vector3.new(math.random(-100, 100), math.random(100, 200), math.random(-100, 100))
-                                force.Parent = part
-                                game:GetService("Debris"):AddItem(force, 1) -- 1秒後にForceを消去
-
-                                -- 部品を数秒後に消す
-                                game:GetService("Debris"):AddItem(part, 5) -- 5秒後に消す
+                                -- 爆発の影響を受けて部品が飛ばされる
+                                part.Velocity = Vector3.new(math.random(-300, 300), math.random(100, 500), math.random(-300, 300))
+                                -- 部品を消す
+                                game:GetService("Debris"):AddItem(part, 5) -- 5秒後に消去
                             end
                         end
 
@@ -746,20 +748,6 @@ ToolTab:AddButton({
 
                         -- プレイヤーの体力を即座に0に設定して死亡させる
                         humanoid.Health = 0
-
-                        -- プレイヤーの体をバラバラにして爆発的に飛ばす
-                        for _, part in pairs(character:GetChildren()) do
-                            if part:IsA("BasePart") then
-                                local explosionForce = Instance.new("BodyVelocity")
-                                explosionForce.MaxForce = Vector3.new(5000, 5000, 5000)
-                                explosionForce.Velocity = Vector3.new(math.random(-300, 300), math.random(100, 500), math.random(-300, 300))
-                                explosionForce.Parent = part
-                                game:GetService("Debris"):AddItem(explosionForce, 1) -- 1秒後にForceを消去
-
-                                -- 部品を消す
-                                game:GetService("Debris"):AddItem(part, 5) -- 5秒後に消去
-                            end
-                        end
                     end
                     beam:Destroy() -- ビームを破壊
                     connection:Disconnect() -- コネクション解除
