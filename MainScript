@@ -1,4 +1,4 @@
-print("ロード中")
+print("ローディング")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
