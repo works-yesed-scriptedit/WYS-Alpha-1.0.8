@@ -642,7 +642,7 @@ ToolTab:AddButton({
         imageLabel.Parent = screenGui
         imageLabel.Size = UDim2.new(1, 0, 1, 0)  -- 画面いっぱいに表示
         imageLabel.Position = UDim2.new(0, 0, 0, 0)
-        imageLabel.Image = "rbxassetid://11790316545"  -- 画像のIDを指定
+        imageLabel.Image = "rbxassetid://6105326"  -- 画像のIDを指定
         imageLabel.Visible = false  -- 初期設定で非表示
 
         -- FOVを変更し、画像を表示する処理
@@ -675,7 +675,7 @@ local selectedPlayerName = nil
 --タブの作成
 local TeleportTab = Window:MakeTab({
 	Name = "Teleport Menu",
-	Icon = "rbxassetid://6105326",
+	Icon = "rbxassetid://4483345998",
 	PremiumOnly = false
 })
 
