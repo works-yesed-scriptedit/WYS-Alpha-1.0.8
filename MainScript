@@ -1,4 +1,4 @@
-print("ローディング開始！")
+print("Githubさんちゃんと！")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
