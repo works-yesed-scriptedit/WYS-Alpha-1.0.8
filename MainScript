@@ -1,4 +1,4 @@
-print("ロード開始")
+print("ロード開始します")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -720,8 +720,9 @@ ToolTab:AddButton({
                 if hit and hit.Parent:FindFirstChild("Humanoid") then
                     local humanoid = hit.Parent.Humanoid
                     if humanoid then
-                        -- プレイヤーの身体をバラバラにする
                         local character = hit.Parent
+
+                        -- プレイヤーの部品とアクセサリを飛ばす
                         for _, part in pairs(character:GetChildren()) do
                             if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
                                 -- 部品を飛ばす
@@ -733,6 +734,13 @@ ToolTab:AddButton({
 
                                 -- 部品を数秒後に消す
                                 game:GetService("Debris"):AddItem(part, 5) -- 5秒後に消す
+                            end
+                        end
+
+                        -- アクセサリを消去
+                        for _, accessory in pairs(character:GetChildren()) do
+                            if accessory:IsA("Accessory") then
+                                accessory:Destroy()
                             end
                         end
 
