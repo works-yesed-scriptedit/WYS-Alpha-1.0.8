@@ -1,4 +1,4 @@
-print("ロード、良いお知らせきた〜")
+print("ロード")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -674,29 +674,41 @@ ToolTab:AddButton({
             end
             lastFireTime = currentTime
 
+            -- クールダウン中テキスト
+            explosionButton.Text = "Loading"
+
             -- ボタンアニメーション（押した感）
             explosionButton.Position = UDim2.new(0, 52, 0, 52)
             task.wait(0.05)
             explosionButton.Position = UDim2.new(0, 50, 0, 50)
 
-            -- ビーム発射
-            local origin = camera.CFrame.Position
-            local direction = camera.CFrame.LookVector * 1000
+            -- 細長いビーム発射
+            local beam = Instance.new("Part")
+            beam.Size = Vector3.new(0.2, 0.2, 6) -- 細くて長い
+            beam.Material = Enum.Material.Neon
+            beam.BrickColor = BrickColor.new("Bright yellow")
+            beam.Anchored = false
+            beam.CanCollide = false
+            beam.CFrame = camera.CFrame * CFrame.new(0, -0.2, -2) -- 少し下にして発射口っぽくする
+            beam.Velocity = camera.CFrame.LookVector * 300 -- 速さ（数字大きいほど速い）
+            beam.Parent = workspace
 
-            local rayResult = workspace:Raycast(origin, direction)
-            local hitPosition = rayResult and rayResult.Position or (origin + direction)
+            -- ビームが何かに当たったら消える
+            local connection
+            connection = beam.Touched:Connect(function(hit)
+                if hit and hit:IsDescendantOf(workspace) then
+                    beam:Destroy()
+                    connection:Disconnect()
+                end
+            end)
 
-            local beamPart = Instance.new("Part")
-            beamPart.Anchored = true
-            beamPart.CanCollide = false
-            beamPart.Material = Enum.Material.Neon
-            beamPart.Color = Color3.fromRGB(255, 255, 0)
-            beamPart.Size = Vector3.new(0.1, 0.1, (origin - hitPosition).Magnitude)
-            beamPart.CFrame = CFrame.new(origin, hitPosition) * CFrame.new(0, 0, -beamPart.Size.Z / 2)
-            beamPart.Parent = workspace
+            -- 3秒経ったら自動消去
+            game:GetService("Debris"):AddItem(beam, 3)
 
-            -- 3秒後に消去
-            game:GetService("Debris"):AddItem(beamPart, 3)
+            -- クールダウン終了後にボタン戻す
+            task.delay(cooldown, function()
+                explosionButton.Text = "💥"
+            end)
         end
 
         explosionButton.MouseButton1Click:Connect(fireBeam)
