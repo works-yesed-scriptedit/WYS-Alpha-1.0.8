@@ -1,4 +1,4 @@
-print("Loadingしてあげてんだよ)
+print("Loading")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -678,6 +678,7 @@ ToolTab:AddButton({
 
             -- 一人称視点に切り替え
             player.CameraMode = Enum.CameraMode.LockFirstPerson
+            camera.CameraType = Enum.CameraType.Scriptable  -- 一人称視点にするため、カメラタイプをScriptableに設定
             camera.CameraMaxZoomDistance = 0  -- 最大ズーム距離を0に設定（カメラが最も近い位置に固定）
             camera.CameraMinZoomDistance = 0  -- 最小ズーム距離を0に設定（カメラが最も近い位置に固定）
         end)
@@ -695,16 +696,16 @@ ToolTab:AddButton({
 
             -- 三人称視点に戻す
             player.CameraMode = Enum.CameraMode.Classic
+            camera.CameraType = Enum.CameraType.Custom  -- 三人称視点に戻すため、カメラタイプをCustomに設定
             -- ツールを外した時に最大ズーム距離と最小ズーム距離を設定
             camera.CameraMaxZoomDistance = 128  -- 最大ズーム距離を128に設定
-            camera.CameraMinZoomDistance = 55  -- 最小ズーム距離を0に設定
-            wait(1)
             camera.CameraMinZoomDistance = 0  -- 最小ズーム距離を0に設定
         end)
 
         print("SniperToolがバックパックに追加されました。")
     end
 })
+
 --==ここより下は別のタブになります==--
 
 local Players = game:GetService("Players")
