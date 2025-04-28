@@ -611,7 +611,7 @@ ToolTab:AddButton({
 
 --スナイパーツール
 ToolTab:AddButton({
-    Name = "Sniper",
+    Name = "Sniper Tool",
     Callback = function()
         print("Sniper Tool button pressed")
 
@@ -622,13 +622,31 @@ ToolTab:AddButton({
         local sniperTool = Instance.new("Tool")
         sniperTool.Name = "SniperTool"
 
-        local handle = Instance.new("Part")
-        handle.Name = "Handle"
-        handle.Size = Vector3.new(1, 5, 1)
-        handle.Anchored = false
-        handle.CanCollide = false
-        handle.Parent = sniperTool
+        -- モデルのAssetIDを設定（実際のAssetIDを指定してください）
+        local assetId = "rbxassetid://18383815236"  -- モデルのAssetIDを設定
 
+        -- モデルを挿入する
+        local insertService = game:GetService("InsertService")
+        local model = insertService:LoadAsset(assetId)
+
+        -- モデル内のHandleを取得してツールに設定
+        local handle = model:FindFirstChild("Handle")
+        if handle then
+            handle.Parent = sniperTool  -- モデルのHandleをツールに設定
+        else
+            -- モデルにHandleがない場合、デフォルトのHandleを作成する
+            local defaultHandle = Instance.new("Part")
+            defaultHandle.Size = Vector3.new(1, 5, 1)  -- 任意のサイズ
+            defaultHandle.Name = "Handle"
+            defaultHandle.Anchored = false
+            defaultHandle.CanCollide = false
+            defaultHandle.Parent = sniperTool
+        end
+
+        -- モデル全体をツールに追加
+        model.Parent = sniperTool
+
+        -- ツールをプレイヤーのバックパックに追加
         sniperTool.Parent = player.Backpack
 
         -- GUI作成
@@ -639,7 +657,7 @@ ToolTab:AddButton({
         local plusLabel = Instance.new("TextLabel")
         plusLabel.Parent = screenGui
         plusLabel.Size = UDim2.new(0, 80, 0, 80)
-        plusLabel.Position = UDim2.new(0.5, -60, 0.5, -60)
+        plusLabel.Position = UDim2.new(0.5, -40, 0.5, -60)  -- 位置を調整
         plusLabel.Text = "+"
         plusLabel.TextSize = 60
         plusLabel.TextColor3 = Color3.fromRGB(50, 50, 50)
@@ -748,29 +766,14 @@ ToolTab:AddButton({
 
                         -- プレイヤーの体力を即座に0に設定して死亡させる
                         humanoid.Health = 0
-
-                        -- プレイヤーをフェードアウトさせる
-                        for _, part in pairs(character:GetChildren()) do
-                            if part:IsA("BasePart") then
-                                -- 透明度を0にしてフェードアウト
-                                local fadeOutTween = game:GetService("TweenService"):Create(
-                                    part,
-                                    TweenInfo.new(1, Enum.EasingStyle.Linear, Enum.EasingDirection.Out),
-                                    {Transparency = 1} -- 透明にする
-                                )
-                                fadeOutTween:Play()
-                            end
-                        end
-
-                        -- フェードアウト後にプレイヤーを削除
-                        task.delay(1, function()
-                            character:Destroy()
-                        end)
                     end
                     beam:Destroy() -- ビームを破壊
                     connection:Disconnect() -- コネクション解除
                 end
             end)
+
+            -- 3秒で自動消去
+            game:GetService("Debris"):AddItem(beam, 3)
 
             -- クールダウン終了後にボタン戻す
             task.delay(cooldown, function()
