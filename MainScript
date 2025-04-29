@@ -1,4 +1,4 @@
-print("ロード開始しますわよ")
+print("ロード開始")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -210,12 +210,14 @@ CharacterTab:AddButton({
 })
 
 --Backpack Enable
-Tab:AddButton({
+local StarterGui = game:GetService("StarterGui")
+
+CharacterTab:AddButton({
 	Name = "Backpack Enable",
 	Callback = function()
-      		print("button pressed")
-                game:GetService("StarterGui"):SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, true)
-  	end    
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, true)
+		print("Backpack Enabled")
+	end    
 })
 
 --Infinite Jump Toggle
