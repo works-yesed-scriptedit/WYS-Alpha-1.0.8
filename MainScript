@@ -209,6 +209,15 @@ CharacterTab:AddButton({
 	end    
 })
 
+--Backpack Enable
+Tab:AddButton({
+	Name = "Backpack Enable",
+	Callback = function()
+      		print("button pressed")
+                game:GetService("StarterGui"):SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, true)
+  	end    
+})
+
 --Infinite Jump Toggle
 local infiniteJumpConnection = nil  -- 無限ジャンプの接続
 local humanoidDiedConnection = nil  -- 死亡時の接続
@@ -452,18 +461,6 @@ CharacterTab:AddToggle({
 			end
 		end
 	end
-})
-
---inventory Enable
-local StarterGui = game:GetService("StarterGui")
-
-CharacterTab:AddToggle({
-	Name = "Backpack Enable",
-	Default = false,
-	Callback = function(Value)
-		-- Value が true の場合は有効化、false の場合は無効化
-		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, Value)
-	end    
 })
 
 --==ここより下は別のタブになります==--
