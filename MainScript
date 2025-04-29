@@ -1,4 +1,4 @@
-print("ロード開始します")
+print("ロード開始しますわよ")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -455,31 +455,14 @@ CharacterTab:AddToggle({
 })
 
 --inventory Enable
-local player = game.Players.LocalPlayer
-local char = player.Character or player.CharacterAdded:Wait()
+local StarterGui = game:GetService("StarterGui")
 
--- ツールON/OFF切り替え関数
-local function toggleTools(enabled)
-    for _, tool in ipairs(player.Backpack:GetChildren()) do
-        if tool:IsA("Tool") then
-            tool.Enabled = enabled
-        end
-    end
-
-    if not enabled then
-        char:FindFirstChildOfClass("Humanoid"):UnequipTools()
-    end
-end
-
--- 最初にツール無効化しておく
-toggleTools(false)
-
--- トグル作成（君のテンプレート）
 CharacterTab:AddToggle({
-	Name = "Inventory Enable",
-	Default = false, -- 最初は無効
+	Name = "Backpack Enable",
+	Default = false,
 	Callback = function(Value)
-		toggleTools(Value)
+		-- Value が true の場合は有効化、false の場合は無効化
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, Value)
 	end    
 })
 
