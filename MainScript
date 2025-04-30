@@ -1,4 +1,4 @@
-print("ロード開始")
+print("ロード開始します")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -621,131 +621,194 @@ ToolTab:AddButton({
 })
 
 --スナイパーツール
-ToolTab:AddButton({
-    Name = "Sniper",
-    Callback = function()
-        print("Sniper Tool button pressed")
+ToolTab:AddButton({  
+    Name = "Sniper",  
+    Callback = function()  
+        print("Sniper Tool button pressed")  
+  
+        local player = game.Players.LocalPlayer  
+        local camera = workspace.CurrentCamera  
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-        local player = game.Players.LocalPlayer
-        local camera = workspace.CurrentCamera
+        -- Snipedプレイヤーを記録するテーブル
+        local snipedPlayers = {}
 
-        -- ツール作成
-        local sniperTool = Instance.new("Tool")
-        sniperTool.Name = "Sniper"
-
-        local handle = Instance.new("Part")
-        handle.Name = "Handle"
-        handle.Size = Vector3.new(1, 5, 1)
-        handle.Anchored = false
-        handle.CanCollide = false
-        handle.Parent = sniperTool
-
-        sniperTool.Parent = player.Backpack
-
-        -- ビーム発射処理
-        local function fireBeam()
-            local currentTime = tick()
-
-            -- 発射音を鳴らす（ここでは省略）
-
-            -- 細長いビーム発射
-            local beam = Instance.new("Part")
-            beam.Size = Vector3.new(0.2, 0.2, 6)
-            beam.Material = Enum.Material.Neon
-            beam.BrickColor = BrickColor.new("Bright yellow")
-            beam.Anchored = false
-            beam.CanCollide = false
-            beam.CFrame = camera.CFrame * CFrame.new(0, 0, -5)
-            beam.Parent = workspace
-
-            -- 直線的に飛ばすために BodyVelocity を使用
-            local bodyVelocity = Instance.new("BodyVelocity")
-            bodyVelocity.MaxForce = Vector3.new(5000, 5000, 5000)
-            bodyVelocity.Velocity = camera.CFrame.LookVector * 300
-            bodyVelocity.Parent = beam
-
-            -- ビームが何かに当たったら
-            local connection
-            connection = beam.Touched:Connect(function(hit)
-                if hit and hit.Parent:FindFirstChild("Humanoid") then
-                    local humanoid = hit.Parent.Humanoid
-                    local character = hit.Parent
-
-                    -- キャラクターを透明化・固定化（物理的に動かなくする）
-                    for _, part in pairs(character:GetChildren()) do
-                        if part:IsA("BasePart") then
+        -- ツール作成  
+        local sniperTool = Instance.new("Tool")  
+        sniperTool.Name = "Sniper"  
+  
+        local handle = Instance.new("Part")  
+        handle.Name = "Handle"  
+        handle.Size = Vector3.new(1, 5, 1)  
+        handle.Anchored = false  
+        handle.CanCollide = false  
+        handle.Parent = sniperTool  
+  
+        sniperTool.Parent = player.Backpack  
+  
+        -- GUI作成  
+        local screenGui = Instance.new("ScreenGui")  
+        screenGui.Parent = player.PlayerGui  
+  
+        -- ＋マーク  
+        local plusLabel = Instance.new("TextLabel")  
+        plusLabel.Parent = screenGui  
+        plusLabel.Size = UDim2.new(0, 80, 0, 80)  
+        plusLabel.Position = UDim2.new(0.5, -40, 0.5, -60)  
+        plusLabel.Text = "+"  
+        plusLabel.TextSize = 60  
+        plusLabel.TextColor3 = Color3.fromRGB(50, 50, 50)  
+        plusLabel.BackgroundTransparency = 1  
+        plusLabel.TextStrokeTransparency = 0.8  
+        plusLabel.Visible = false  
+  
+        -- 💥ボタン  
+        local explosionButton = Instance.new("TextButton")  
+        explosionButton.Parent = screenGui  
+        explosionButton.Size = UDim2.new(0, 50, 0, 50)  
+        explosionButton.Position = UDim2.new(0, 50, 0, 50)  
+        explosionButton.Text = "💥"  
+        explosionButton.TextSize = 30  
+        explosionButton.TextColor3 = Color3.fromRGB(255, 255, 255)  
+        explosionButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)  
+        explosionButton.BackgroundTransparency = 0.5  
+        explosionButton.BorderSizePixel = 0  
+        explosionButton.AnchorPoint = Vector2.new(0, 0)  
+        explosionButton.AutoButtonColor = false  
+        explosionButton.Visible = false  
+  
+        -- 発射音  
+        local fireSound = Instance.new("Sound")  
+        fireSound.SoundId = "rbxassetid://1905367471"  
+        fireSound.Volume = 1  
+        fireSound.Parent = screenGui  
+  
+        -- クールタイム音  
+        local secondarySound = Instance.new("Sound")  
+        secondarySound.SoundId = "rbxassetid://138084889"  
+        secondarySound.Volume = 1  
+        secondarySound.Parent = screenGui  
+  
+        local lastFireTime = 0  
+        local cooldown = 3  
+  
+        local function fireBeam()  
+            local currentTime = tick()  
+            if currentTime - lastFireTime < cooldown then return end  
+            lastFireTime = currentTime  
+  
+            fireSound:Play()  
+            explosionButton.Text = "Loading"  
+            explosionButton.TextSize = 20  
+            explosionButton.Position = UDim2.new(0, 52, 0, 52)  
+            task.wait(0.05)  
+            explosionButton.Position = UDim2.new(0, 50, 0, 50)  
+  
+            local beam = Instance.new("Part")  
+            beam.Size = Vector3.new(0.2, 0.2, 6)  
+            beam.Material = Enum.Material.Neon  
+            beam.BrickColor = BrickColor.new("Bright yellow")  
+            beam.Anchored = false  
+            beam.CanCollide = false  
+            beam.CFrame = camera.CFrame * CFrame.new(0, 0, -5)  
+            beam.Parent = workspace  
+  
+            local bodyVelocity = Instance.new("BodyVelocity")  
+            bodyVelocity.MaxForce = Vector3.new(5000, 5000, 5000)  
+            bodyVelocity.Velocity = camera.CFrame.LookVector * 300  
+            bodyVelocity.Parent = beam  
+  
+            local connection  
+            connection = beam.Touched:Connect(function(hit)  
+                if hit and hit.Parent:FindFirstChild("Humanoid") then  
+                    local humanoid = hit.Parent.Humanoid  
+                    local character = hit.Parent  
+                    local targetPlayer = game.Players:GetPlayerFromCharacter(character)
+                    if not targetPlayer then return end
+  
+                    -- 爆発効果
+                    local explosion = Instance.new("Explosion")  
+                    explosion.Position = humanoid.RootPart.Position  
+                    explosion.BlastRadius = 10  
+                    explosion.BlastPressure = 5000  
+                    explosion.Parent = workspace  
+  
+                    -- フェードアウトと一時退避
+                    for _, part in pairs(character:GetChildren()) do  
+                        if part:IsA("BasePart") then  
+                            local tween = game:GetService("TweenService"):Create(  
+                                part,  
+                                TweenInfo.new(1),  
+                                {Transparency = 1}  
+                            )  
+                            tween:Play()  
                             part.Anchored = true
                             part.CanCollide = false
-                            local fadeOut = game:GetService("TweenService"):Create(
-                                part,
-                                TweenInfo.new(1),
-                                {Transparency = 1}
-                            )
-                            fadeOut:Play()
-                        end
-                    end
+                        end  
+                    end  
+  
+                    task.delay(1, function()
+                        -- 保存して ReplicatedStorage へ退避
+                        character.Name = targetPlayer.Name .. "_Sniped"
+                        character.Parent = ReplicatedStorage
+                        snipedPlayers[targetPlayer.Name] = character
 
-                    -- アクセサリも透明化
-                    for _, accessory in pairs(character:GetChildren()) do
-                        if accessory:IsA("Accessory") then
-                            if accessory:FindFirstChild("Handle") then
-                                accessory.Handle.Transparency = 1
-                            end
-                        end
-                    end
-
-                    -- Humanoid無効化
-                    humanoid.Health = 1
-                    humanoid.PlatformStand = true
-
-                    beam:Destroy() -- ビーム破壊
-                    connection:Disconnect() -- コネクション解除
-                end
-            end)
-        end
-
-        -- ビーム発射ボタンに接続
-        sniperTool.Activated:Connect(fireBeam)
-
-        print("SniperToolがバックパックに追加されました。")
-    end
+                        -- Humanoid を倒す
+                        humanoid.Health = 0
+                    end)  
+  
+                    beam:Destroy()  
+                    connection:Disconnect()  
+                end  
+            end)  
+  
+            task.delay(cooldown, function()  
+                explosionButton.Text = "💥"  
+                explosionButton.TextSize = 30  
+            end)  
+  
+            task.delay(1, function()  
+                secondarySound:Play()  
+            end)  
+        end  
+  
+        explosionButton.MouseButton1Click:Connect(fireBeam)  
+  
+        sniperTool.Equipped:Connect(function()  
+            print("Sniper Tool Equipped")  
+            camera.FieldOfView = 20  
+            explosionButton.Visible = true  
+            plusLabel.Visible = true  
+  
+            player.CameraMode = Enum.CameraMode.LockFirstPerson  
+            player.CameraMinZoomDistance = 0  
+            player.CameraMaxZoomDistance = 0  
+        end)  
+  
+        sniperTool.Unequipped:Connect(function()  
+            print("Sniper Tool Unequipped")  
+            camera.FieldOfView = 70  
+            explosionButton.Visible = false  
+            plusLabel.Visible = false  
+  
+            player.CameraMode = Enum.CameraMode.Classic  
+            player.CameraMinZoomDistance = 0  
+            player.CameraMaxZoomDistance = 128  
+        end)  
+  
+        print("SniperToolがバックパックに追加されました。")  
+    end  
 })
---撃ったプレイヤー復活
+
+--復活
 ToolTab:AddButton({
-    Name = "復活させる",
+    Name = "復活",
     Callback = function()
-        -- 保存されたキャラクター情報を元に復元
-        for _, player in pairs(game.Players:GetPlayers()) do
-            local character = player.Character
-            if character then
-                -- キャラクターを復元
-                for _, part in pairs(character:GetChildren()) do
-                    if part:IsA("BasePart") then
-                        -- 透明度戻す
-                        part.Transparency = 0
-                        part.Anchored = false
-                        part.CanCollide = true
-                    end
-                end
+        local player = game.Players.LocalPlayer
+        local storedCharacter = game.ReplicatedStorage:FindFirstChild(player.Name)
 
-                -- アクセサリの透明度戻す
-                for _, accessory in pairs(character:GetChildren()) do
-                    if accessory:IsA("Accessory") then
-                        if accessory:FindFirstChild("Handle") then
-                            accessory.Handle.Transparency = 0
-                        end
-                    end
-                end
-
-                -- Humanoidを復元
-                local humanoid = character:FindFirstChildOfClass("Humanoid")
-                if humanoid then
-                    humanoid.Health = humanoid.MaxHealth
-                    humanoid.PlatformStand = false
-                end
-            end
-        end
-        print("全プレイヤーを復活させました。")
+        -- 新しいキャラクターを作成してリスポーン
+        player:LoadCharacter()
     end
 })
 
