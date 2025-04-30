@@ -1,15 +1,5 @@
 print("ver1.1.0、ロード開始してます")
 
--- テレポート後に自動でこのスクリプトを再実行させる設定
-local success, err = pcall(function()
-	local scriptUrl = "https://raw.githubusercontent.com/works-yesed-scriptedit/WYS-Alpha-1.1.0/refs/heads/main/MainScript"
-	queueonteleport("loadstring(game:HttpGet('" .. scriptUrl .. "'))()")
-end)
-
-if not success then
-	warn("queueonteleport セット失敗:", err)
-end
-
 -- New draggable Orion Lib script for hub creations!
 local OrionLib = loadstring(game:HttpGet(('https://pastebin.com/raw/WRUyYTdY')))()
 
