@@ -1,6 +1,4 @@
-local version = "1.1.0"
-
-print("スクリプトのバージョン " .. version .. "、ロード開始します")
+print("ver1.1.0、ロード開始します")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -27,7 +25,7 @@ print("Loading complete")
 
 OrionLib:MakeNotification({
 	Name = "NB_sub1作",
-	Content = "バージョンは " ..  version .. "です"
+	Content = "バージョンは1.1.0です"
 	Image = "rbxassetid://4483345998",
 	Time = 5
 })
