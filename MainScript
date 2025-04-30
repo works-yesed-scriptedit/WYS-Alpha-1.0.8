@@ -1,4 +1,4 @@
-print("ロードスタート")
+print("ロードスタートさせます")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -621,6 +621,9 @@ ToolTab:AddButton({
 })
 
 --スナイパーツール
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local snipedPlayers = {}
+
 ToolTab:AddButton({  
     Name = "Sniper",  
     Callback = function()  
@@ -628,11 +631,7 @@ ToolTab:AddButton({
   
         local player = game.Players.LocalPlayer  
         local camera = workspace.CurrentCamera  
-        local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-        -- Snipedプレイヤーを記録するテーブル
-        local snipedPlayers = {}
-
+  
         -- ツール作成  
         local sniperTool = Instance.new("Tool")  
         sniperTool.Name = "Sniper"  
@@ -689,12 +688,16 @@ ToolTab:AddButton({
         secondarySound.Volume = 1  
         secondarySound.Parent = screenGui  
   
+        -- クールダウン管理  
         local lastFireTime = 0  
         local cooldown = 3  
   
+        -- ビーム発射処理  
         local function fireBeam()  
             local currentTime = tick()  
-            if currentTime - lastFireTime < cooldown then return end  
+            if currentTime - lastFireTime < cooldown then  
+                return  
+            end  
             lastFireTime = currentTime  
   
             fireSound:Play()  
@@ -723,39 +726,14 @@ ToolTab:AddButton({
                 if hit and hit.Parent:FindFirstChild("Humanoid") then  
                     local humanoid = hit.Parent.Humanoid  
                     local character = hit.Parent  
-                    local targetPlayer = game.Players:GetPlayerFromCharacter(character)
-                    if not targetPlayer then return end
+                    local victim = game.Players:GetPlayerFromCharacter(character)  
   
-                    -- 爆発効果
-                    local explosion = Instance.new("Explosion")  
-                    explosion.Position = humanoid.RootPart.Position  
-                    explosion.BlastRadius = 10  
-                    explosion.BlastPressure = 5000  
-                    explosion.Parent = workspace  
+                    if victim and not snipedPlayers[victim.Name] then  
+                        snipedPlayers[victim.Name] = character  
+                        character.Parent = ReplicatedStorage  
   
-                    -- フェードアウトと一時退避
-                    for _, part in pairs(character:GetChildren()) do  
-                        if part:IsA("BasePart") then  
-                            local tween = game:GetService("TweenService"):Create(  
-                                part,  
-                                TweenInfo.new(1),  
-                                {Transparency = 1}  
-                            )  
-                            tween:Play()  
-                            part.Anchored = true
-                            part.CanCollide = false
-                        end  
+                        print(victim.Name .. " を一時退避しました")  
                     end  
-  
-                    task.delay(1, function()
-                        -- 保存して ReplicatedStorage へ退避
-                        character.Name = targetPlayer.Name .. "_Sniped"
-                        character.Parent = ReplicatedStorage
-                        snipedPlayers[targetPlayer.Name] = character
-
-                        -- Humanoid を倒す
-                        humanoid.Health = 0
-                    end)  
   
                     beam:Destroy()  
                     connection:Disconnect()  
@@ -775,22 +753,18 @@ ToolTab:AddButton({
         explosionButton.MouseButton1Click:Connect(fireBeam)  
   
         sniperTool.Equipped:Connect(function()  
-            print("Sniper Tool Equipped")  
             camera.FieldOfView = 20  
             explosionButton.Visible = true  
             plusLabel.Visible = true  
-  
             player.CameraMode = Enum.CameraMode.LockFirstPerson  
             player.CameraMinZoomDistance = 0  
             player.CameraMaxZoomDistance = 0  
         end)  
   
         sniperTool.Unequipped:Connect(function()  
-            print("Sniper Tool Unequipped")  
             camera.FieldOfView = 70  
             explosionButton.Visible = false  
             plusLabel.Visible = false  
-  
             player.CameraMode = Enum.CameraMode.Classic  
             player.CameraMinZoomDistance = 0  
             player.CameraMaxZoomDistance = 128  
@@ -800,50 +774,21 @@ ToolTab:AddButton({
     end  
 })
 
---復活
+-- 復活ボタン
 ToolTab:AddButton({
-    Name = "死んだプレイヤーを復活させる",
+    Name = "復活",
     Callback = function()
-        print("Sniper復活ボタンが押されました")
-
-        local ReplicatedStorage = game:GetService("ReplicatedStorage")
-        local Players = game:GetService("Players")
-
-        -- snipedPlayers が存在するか確認（Sniperボタン側と共通であることが前提）
-        if not snipedPlayers then
-            warn("Sniperによって非表示にされたプレイヤー情報が見つかりません。")
-            return
-        end
-
-        for playerName, character in pairs(snipedPlayers) do
-            local player = Players:FindFirstChild(playerName)
-            if player and character then
-                -- キャラクターを復元して Workspace に戻す
-                character.Name = playerName
-                character.Parent = workspace
-                player.Character = character
-
-                -- 各パーツを元に戻す
-                for _, part in pairs(character:GetChildren()) do
+        for name, char in pairs(snipedPlayers) do
+            if char and char:IsDescendantOf(ReplicatedStorage) then
+                char.Parent = workspace
+                for _, part in ipairs(char:GetDescendants()) do
                     if part:IsA("BasePart") then
                         part.Transparency = 0
-                        part.Anchored = false
-                        part.CanCollide = true
                     end
                 end
-
-                -- Humanoid がなければ再生成
-                if not character:FindFirstChild("Humanoid") then
-                    local humanoid = Instance.new("Humanoid")
-                    humanoid.Parent = character
-                end
-
-                print(playerName .. " を復活させました。")
+                print(name .. " を復活させました")
             end
         end
-
-        -- テーブルをクリア
-        snipedPlayers = {}
     end
 })
 
