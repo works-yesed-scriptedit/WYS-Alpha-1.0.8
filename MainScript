@@ -1,8 +1,8 @@
-print("ロード開始します")
+print("ロード開始")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
-	local scriptUrl = "https://raw.githubusercontent.com/works-yesed-scriptedit/WYS-Alpha-1.0.7/refs/heads/main/mainScript"
+	local scriptUrl = "https://raw.githubusercontent.com/works-yesed-scriptedit/WYS-Alpha-1.1.0/refs/heads/main/MainScript"
 	queueonteleport("loadstring(game:HttpGet('" .. scriptUrl .. "'))()")
 end)
 
@@ -802,13 +802,48 @@ ToolTab:AddButton({
 
 --復活
 ToolTab:AddButton({
-    Name = "復活",
+    Name = "死んだプレイヤーを復活させる",
     Callback = function()
-        local player = game.Players.LocalPlayer
-        local storedCharacter = game.ReplicatedStorage:FindFirstChild(player.Name)
+        print("Sniper復活ボタンが押されました")
 
-        -- 新しいキャラクターを作成してリスポーン
-        player:LoadCharacter()
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local Players = game:GetService("Players")
+
+        -- snipedPlayers が存在するか確認（Sniperボタン側と共通であることが前提）
+        if not snipedPlayers then
+            warn("Sniperによって非表示にされたプレイヤー情報が見つかりません。")
+            return
+        end
+
+        for playerName, character in pairs(snipedPlayers) do
+            local player = Players:FindFirstChild(playerName)
+            if player and character then
+                -- キャラクターを復元して Workspace に戻す
+                character.Name = playerName
+                character.Parent = workspace
+                player.Character = character
+
+                -- 各パーツを元に戻す
+                for _, part in pairs(character:GetChildren()) do
+                    if part:IsA("BasePart") then
+                        part.Transparency = 0
+                        part.Anchored = false
+                        part.CanCollide = true
+                    end
+                end
+
+                -- Humanoid がなければ再生成
+                if not character:FindFirstChild("Humanoid") then
+                    local humanoid = Instance.new("Humanoid")
+                    humanoid.Parent = character
+                end
+
+                print(playerName .. " を復活させました。")
+            end
+        end
+
+        -- テーブルをクリア
+        snipedPlayers = {}
     end
 })
 
