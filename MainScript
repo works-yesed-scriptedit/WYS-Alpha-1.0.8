@@ -1,12 +1,6 @@
 local ver = 1.1.0
 print("バージョンは  .. ver .. "、ロード開始してます")
 
---サーバーに入り直したときまた起動するように
-local success, err = pcall(function()
-	local scriptUrl = "https://raw.githubusercontent.com/works-yesed-scriptedit/WYS-Alpha-1.1.0/refs/heads/main/MainScript"
-	queueonteleport("loadstring(game:HttpGet('" .. scriptUrl .. "'))()")
-end)
-
 if not success then
 	warn("queueonteleport セット失敗:", err)
 end
