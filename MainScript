@@ -1,4 +1,4 @@
-print("ver1.1.0、ロード開始します")
+print("ver1.1.0、ロード開始してます")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
