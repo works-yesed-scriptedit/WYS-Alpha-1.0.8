@@ -1,4 +1,4 @@
-print("ver1.1.0、ロード開始してます")
+print("ロード開始してます")
 
 -- New draggable Orion Lib script for hub creations!
 local OrionLib = loadstring(game:HttpGet(('https://pastebin.com/raw/WRUyYTdY')))()
@@ -11,11 +11,11 @@ local Window = OrionLib:MakeWindow({
     ConfigFolder = "WorksYesed Hub" -- Put the name of your hub or script here!
 })
 
-print("Loading complete")
+print("ロード完了")
 
 OrionLib:MakeNotification({
 	Name = "NB_sub1作",
-	Content = "バージョンは1.1.0です"
+	Content = "バージョンは1.1.0です",
 	Image = "rbxassetid://4483345998",
 	Time = 5
 })
