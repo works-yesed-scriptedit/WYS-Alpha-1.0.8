@@ -826,195 +826,185 @@ ToolTab:AddButton({
 })
 
 --ロケラン
-local blastRadius = 20
-local blastPressure = 1000000
-
-ToolTab:AddTextbox({
-	Name = "爆発範囲",
-	Default = tostring(blastRadius),
-	TextDisappear = false,
-	Callback = function(Value)
-		local num = tonumber(Value)
-		if num then
-			blastRadius = num
-			print("爆発範囲:", blastRadius)
-		end
-	end
-})
-
-ToolTab:AddTextbox({
-	Name = "爆発威力",
-	Default = tostring(blastPressure),
-	TextDisappear = false,
-	Callback = function(Value)
-		local num = tonumber(Value)
-		if num then
-			blastPressure = num
-			print("爆発威力:", blastPressure)
-		end
-	end
-})
-
 ToolTab:AddButton({
-	Name = "Rocket Launcher",
-	Callback = function()
-		print("Rocket Launcher Activated")
+    Name = "Rocket Launcher",
+    Callback = function()
+        -- ロケランのツールを作成
+        local Players = game:GetService("Players")
+        local TweenService = game:GetService("TweenService")
+        local player = Players.LocalPlayer
 
-		local Players = game:GetService("Players")
-		local TweenService = game:GetService("TweenService")
-		local player = Players.LocalPlayer
+        -- ツールを作成
+        local tool = Instance.new("Tool")
+        tool.Name = "Rocket Launcher"
+        tool.RequiresHandle = false
+        tool.Parent = player:WaitForChild("Backpack")
 
-		-- ツール作成
-		local tool = Instance.new("Tool")
-		tool.Name = "Rocket Launcher"
-		tool.RequiresHandle = false
-		tool.Parent = player:WaitForChild("Backpack")
+        -- UIの作成
+        local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+        screenGui.Name = "ExplosionBlasterUI"
+        screenGui.ResetOnSpawn = false
 
-		-- UI作成（中央上）
-		local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-		screenGui.Name = "ExplosionBlasterUI"
-		screenGui.ResetOnSpawn = false
+        -- 発射ボタン
+        local fireButton = Instance.new("TextButton")
+        fireButton.Size = UDim2.new(0, 50, 0, 50)
+        fireButton.Position = UDim2.new(1, -60, 0, 10)
+        fireButton.BackgroundTransparency = 0.5
+        fireButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+        fireButton.Text = "💥"
+        fireButton.TextScaled = true
+        fireButton.Visible = false
+        fireButton.Parent = screenGui
 
-		local infoLabel = Instance.new("TextLabel")
-		infoLabel.Size = UDim2.new(0, 250, 0, 50)
-		infoLabel.Position = UDim2.new(0.5, -125, 0, 10)
-		infoLabel.BackgroundTransparency = 0.3
-		infoLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-		infoLabel.TextColor3 = Color3.new(1,1,1)
-		infoLabel.TextScaled = true
-		infoLabel.Text = ""
-		infoLabel.Visible = false
-		infoLabel.Parent = screenGui
+        -- クロスヘア（＋）
+        local crosshair = Instance.new("TextLabel")
+        crosshair.Size = UDim2.new(0, 30, 0, 30)
+        crosshair.Position = UDim2.new(0.5, -15, 0.5, -45)
+        crosshair.BackgroundTransparency = 1
+        crosshair.Text = "+"
+        crosshair.TextColor3 = Color3.new(1, 1, 1)
+        crosshair.TextScaled = true
+        crosshair.Visible = false
+        crosshair.Parent = screenGui
 
-		local fireButton = Instance.new("TextButton")
-		fireButton.Size = UDim2.new(0, 50, 0, 50)
-		fireButton.Position = UDim2.new(1, -60, 0, 10)
-		fireButton.BackgroundTransparency = 0.5
-		fireButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-		fireButton.Text = "💥"
-		fireButton.TextScaled = true
-		fireButton.Visible = false
-		fireButton.Parent = screenGui
+        -- 視点切り替え
+        local function setFirstPerson(enabled)
+            if enabled then
+                player.CameraMode = Enum.CameraMode.LockFirstPerson
+                player.CameraMaxZoomDistance = 0
+                player.CameraMinZoomDistance = 0
+            else
+                player.CameraMode = Enum.CameraMode.Classic
+                player.CameraMaxZoomDistance = 128
+                player.CameraMinZoomDistance = 0
+            end
+        end
 
-		local crosshair = Instance.new("TextLabel")
-		crosshair.Size = UDim2.new(0, 30, 0, 30)
-		crosshair.Position = UDim2.new(0.5, -15, 0.5, -45)
-		crosshair.BackgroundTransparency = 1
-		crosshair.Text = "+"
-		crosshair.TextColor3 = Color3.new(1,1,1)
-		crosshair.TextScaled = true
-		crosshair.Visible = false
-		crosshair.Parent = screenGui
+        -- ツール装備時
+        tool.Equipped:Connect(function()
+            fireButton.Visible = true
+            crosshair.Visible = true
+            setFirstPerson(true)
+        end)
 
-		local function setFirstPerson(enabled)
-			if enabled then
-				player.CameraMode = Enum.CameraMode.LockFirstPerson
-				player.CameraMaxZoomDistance = 0
-				player.CameraMinZoomDistance = 0
-			else
-				player.CameraMode = Enum.CameraMode.Classic
-				player.CameraMaxZoomDistance = 128
-				player.CameraMinZoomDistance = 0
-			end
-		end
+        tool.Unequipped:Connect(function()
+            fireButton.Visible = false
+            crosshair.Visible = false
+            setFirstPerson(false)
+        end)
 
-		tool.Equipped:Connect(function()
-			fireButton.Visible = true
-			crosshair.Visible = true
-			infoLabel.Visible = true
-			infoLabel.Text = "範囲: " .. tostring(blastRadius) .. "｜威力: " .. tostring(blastPressure)
-			setFirstPerson(true)
-		end)
+        -- 発射処理
+        local canFire = true
+        fireButton.MouseButton1Click:Connect(function()
+            if not canFire then return end
+            canFire = false
+            fireButton.Text = "Loading"
 
-		tool.Unequipped:Connect(function()
-			fireButton.Visible = false
-			crosshair.Visible = false
-			infoLabel.Visible = false
-			setFirstPerson(false)
-		end)
+            -- ボタンアニメーション
+            local originalSize = fireButton.Size
+            local originalPos = fireButton.Position
+            local shrinkTween = TweenService:Create(fireButton, TweenInfo.new(0.1), {
+                Size = UDim2.new(0, 45, 0, 45),
+                Position = UDim2.new(1, -57, 0, 12)
+            })
+            local expandTween = TweenService:Create(fireButton, TweenInfo.new(0.1), {
+                Size = originalSize,
+                Position = originalPos
+            })
+            shrinkTween:Play()
+            shrinkTween.Completed:Connect(function()
+                expandTween:Play()
+            end)
 
-		local canFire = true
-		fireButton.MouseButton1Click:Connect(function()
-			if not canFire then return end
-			canFire = false
-			fireButton.Text = "Loading"
+            -- 弾を発射
+            local camera = workspace.CurrentCamera
+            local direction = camera.CFrame.LookVector
+            local projectile = Instance.new("Part")
+            projectile.Size = Vector3.new(1, 1, 1)
+            projectile.Shape = Enum.PartType.Block
+            projectile.Color = Color3.fromRGB(0, 0, 0)
+            projectile.Anchored = false
+            projectile.CanCollide = true
+            projectile.CFrame = CFrame.new(camera.CFrame.Position + direction * 5)
+            projectile.Parent = workspace
 
-			local camera = workspace.CurrentCamera
-			local direction = camera.CFrame.LookVector
-			local projectile = Instance.new("Part")
-			projectile.Size = Vector3.new(1,1,1)
-			projectile.Shape = Enum.PartType.Block
-			projectile.Color = Color3.fromRGB(0,0,0)
-			projectile.Anchored = false
-			projectile.CanCollide = true
-			projectile.CFrame = CFrame.new(camera.CFrame.Position + direction * 5)
-			projectile.Parent = workspace
+            local bodyVelocity = Instance.new("BodyVelocity")
+            bodyVelocity.Velocity = direction * 150
+            bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+            bodyVelocity.Parent = projectile
 
-			local bodyVelocity = Instance.new("BodyVelocity")
-			bodyVelocity.Velocity = direction * 150
-			bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-			bodyVelocity.Parent = projectile
+            -- 4秒後に消滅
+            task.delay(4, function()
+                if projectile and projectile.Parent then
+                    projectile:Destroy()
+                end
+            end)
 
-			task.delay(4, function()
-				if projectile and projectile.Parent then
-					projectile:Destroy()
-				end
-			end)
+            -- 接触時の処理
+            local touched = false
+            projectile.Touched:Connect(function(hit)
+                if touched then return end
+                touched = true
 
-			local touched = false
-			projectile.Touched:Connect(function(hit)
-				if touched then return end
-				touched = true
+                -- 爆発音を鳴らす
+                local sound = Instance.new("Sound")
+                sound.SoundId = "rbxassetid://3149249837"
+                sound.Volume = 1
+                sound.EmitterSize = 30
+                sound.MaxDistance = 100
+                sound.RollOffMode = Enum.RollOffMode.Linear
+                sound.Parent = workspace
+                sound:Play()
+                game:GetService("Debris"):AddItem(sound, 5)
 
-				local sound = Instance.new("Sound")
-				sound.SoundId = "rbxassetid://3149249837"
-				sound.Volume = 1
-				sound.EmitterSize = 30
-				sound.MaxDistance = 100
-				sound.RollOffMode = Enum.RollOffMode.Linear
-				sound.Parent = workspace
-				sound:Play()
-				game:GetService("Debris"):AddItem(sound, 5)
+                -- 爆発の作成
+                local explosion = Instance.new("Explosion")
+                explosion.Position = projectile.Position
+                explosion.BlastRadius = 20
+                explosion.BlastPressure = 10000
+                explosion.DestroyJointRadiusPercent = 0
+                explosion.Parent = workspace
 
-				local explosion = Instance.new("Explosion")
-				explosion.Position = projectile.Position
-				explosion.BlastRadius = blastRadius
-				explosion.BlastPressure = blastPressure
-				explosion.DestroyJointRadiusPercent = 0
-				explosion.Parent = workspace
+                -- 爆風ヒット時の処理
+                explosion.Hit:Connect(function(part)
+                    local char = part:FindFirstAncestorOfClass("Model")
+                    local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+                    if humanoid and char ~= player.Character then
+                        -- HPを0にする
+                        humanoid.Health = 0
 
-				explosion.Hit:Connect(function(part)
-					local char = part:FindFirstAncestorOfClass("Model")
-					local humanoid = char and char:FindFirstChildOfClass("Humanoid")
-					if humanoid and char ~= player.Character then
-						humanoid.Health = 0
-						for _,p in pairs(char:GetDescendants()) do
-							if p:IsA("BasePart") then
-								p.Anchored = false
-								p.Velocity = Vector3.new(math.random(-150,150), math.random(150,250), math.random(-150,150))
-								local fadeTween = TweenService:Create(p, TweenInfo.new(2), {
-									Transparency = 1
-								})
-								fadeTween:Play()
-							end
-						end
-						task.delay(1, function()
-							if char then
-								char:Destroy()
-							end
-						end)
-					end
-				end)
+                        for _, p in pairs(char:GetDescendants()) do
+                            if p:IsA("BasePart") then
+                                p.Anchored = false
+                                p.Velocity = Vector3.new(math.random(-150, 150), math.random(150, 250), math.random(-150, 150))
 
-				projectile:Destroy()
-			end)
+                                -- フェードアウト
+                                local fadeTween = TweenService:Create(p, TweenInfo.new(2), {
+                                    Transparency = 1
+                                })
+                                fadeTween:Play()
+                            end
+                        end
 
-			task.delay(1, function()
-				canFire = true
-				fireButton.Text = "💥"
-			end)
-		end)
-	end
+                        -- 数秒後に削除
+                        task.delay(1, function()
+                            if char then
+                                char:Destroy()
+                            end
+                        end)
+                    end
+                end)
+
+                projectile:Destroy()
+            end)
+
+            -- クールタイム処理
+            task.delay(0, function()
+                canFire = true
+                fireButton.Text = "💥"
+            end)
+        end)
+    end    
 })
 
 --==ここより下は別のタブになります==--
