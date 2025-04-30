@@ -1,6 +1,6 @@
 local version = "1.1.0"
 
-print("スクリプトのバージョン " .. version .. "、ロード開始")
+print("スクリプトのバージョン " .. version .. "、ロード開始します")
 
 -- テレポート後に自動でこのスクリプトを再実行させる設定
 local success, err = pcall(function()
@@ -828,27 +828,66 @@ ToolTab:AddButton({
 })
 
 --ロケラン
+local blastRadius = 20
+local blastPressure = 1000000
+
+ToolTab:AddTextbox({
+	Name = "爆発範囲",
+	Default = tostring(blastRadius),
+	TextDisappear = false,
+	Callback = function(Value)
+		local num = tonumber(Value)
+		if num then
+			blastRadius = num
+			print("爆発範囲:", blastRadius)
+		end
+	end
+})
+
+ToolTab:AddTextbox({
+	Name = "爆発威力",
+	Default = tostring(blastPressure),
+	TextDisappear = false,
+	Callback = function(Value)
+		local num = tonumber(Value)
+		if num then
+			blastPressure = num
+			print("爆発威力:", blastPressure)
+		end
+	end
+})
+
 ToolTab:AddButton({
 	Name = "Rocket Launcher",
 	Callback = function()
+		print("Rocket Launcher Activated")
+
 		local Players = game:GetService("Players")
 		local TweenService = game:GetService("TweenService")
 		local player = Players.LocalPlayer
 
-		local blastRadius = 20 -- 爆発範囲
-		local blastPressure = 1000000 -- 爆発威力
-
 		-- ツール作成
 		local tool = Instance.new("Tool")
-		tool.Name = "ExplosionBlaster"
+		tool.Name = "Rocket Launcher"
 		tool.RequiresHandle = false
 		tool.Parent = player:WaitForChild("Backpack")
 
+		-- UI作成（中央上）
 		local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 		screenGui.Name = "ExplosionBlasterUI"
 		screenGui.ResetOnSpawn = false
 
-		-- 発射ボタン
+		local infoLabel = Instance.new("TextLabel")
+		infoLabel.Size = UDim2.new(0, 250, 0, 50)
+		infoLabel.Position = UDim2.new(0.5, -125, 0, 10)
+		infoLabel.BackgroundTransparency = 0.3
+		infoLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+		infoLabel.TextColor3 = Color3.new(1,1,1)
+		infoLabel.TextScaled = true
+		infoLabel.Text = ""
+		infoLabel.Visible = false
+		infoLabel.Parent = screenGui
+
 		local fireButton = Instance.new("TextButton")
 		fireButton.Size = UDim2.new(0, 50, 0, 50)
 		fireButton.Position = UDim2.new(1, -60, 0, 10)
@@ -859,49 +898,6 @@ ToolTab:AddButton({
 		fireButton.Visible = false
 		fireButton.Parent = screenGui
 
-		-- 範囲テキストボックス
-		local rangeBox = Instance.new("TextBox")
-		rangeBox.Size = UDim2.new(0, 50, 0, 25)
-		rangeBox.Position = UDim2.new(1, -60, 0, 65)
-		rangeBox.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-		rangeBox.Text = tostring(blastRadius)
-		rangeBox.TextScaled = true
-		rangeBox.ClearTextOnFocus = false
-		rangeBox.Visible = false
-		rangeBox.Parent = screenGui
-
-		-- 威力テキストボックス
-		local pressureBox = Instance.new("TextBox")
-		pressureBox.Size = UDim2.new(0, 50, 0, 25)
-		pressureBox.Position = UDim2.new(1, -60, 0, 95)
-		pressureBox.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-		pressureBox.Text = tostring(blastPressure)
-		pressureBox.TextScaled = true
-		pressureBox.ClearTextOnFocus = false
-		pressureBox.Visible = false
-		pressureBox.Parent = screenGui
-
-		rangeBox.FocusLost:Connect(function()
-			local val = tonumber(rangeBox.Text)
-			if val then
-				blastRadius = val
-				print("爆発範囲:", blastRadius)
-			else
-				rangeBox.Text = tostring(blastRadius)
-			end
-		end)
-
-		pressureBox.FocusLost:Connect(function()
-			local val = tonumber(pressureBox.Text)
-			if val then
-				blastPressure = val
-				print("爆発威力:", blastPressure)
-			else
-				pressureBox.Text = tostring(blastPressure)
-			end
-		end)
-
-		-- クロスヘア
 		local crosshair = Instance.new("TextLabel")
 		crosshair.Size = UDim2.new(0, 30, 0, 30)
 		crosshair.Position = UDim2.new(0.5, -15, 0.5, -45)
@@ -926,17 +922,16 @@ ToolTab:AddButton({
 
 		tool.Equipped:Connect(function()
 			fireButton.Visible = true
-			rangeBox.Visible = true
-			pressureBox.Visible = true
 			crosshair.Visible = true
+			infoLabel.Visible = true
+			infoLabel.Text = "範囲: " .. tostring(blastRadius) .. "｜威力: " .. tostring(blastPressure)
 			setFirstPerson(true)
 		end)
 
 		tool.Unequipped:Connect(function()
 			fireButton.Visible = false
-			rangeBox.Visible = false
-			pressureBox.Visible = false
 			crosshair.Visible = false
+			infoLabel.Visible = false
 			setFirstPerson(false)
 		end)
 
@@ -946,39 +941,30 @@ ToolTab:AddButton({
 			canFire = false
 			fireButton.Text = "Loading"
 
-			local shrinkTween = TweenService:Create(fireButton, TweenInfo.new(0.1), {
-				Size = UDim2.new(0, 45, 0, 45),
-				Position = UDim2.new(1, -57, 0, 12)
-			})
-			local expandTween = TweenService:Create(fireButton, TweenInfo.new(0.1), {
-				Size = fireButton.Size,
-				Position = fireButton.Position
-			})
-			shrinkTween:Play()
-			shrinkTween.Completed:Connect(function() expandTween:Play() end)
-
 			local camera = workspace.CurrentCamera
 			local direction = camera.CFrame.LookVector
 			local projectile = Instance.new("Part")
 			projectile.Size = Vector3.new(1,1,1)
 			projectile.Shape = Enum.PartType.Block
 			projectile.Color = Color3.fromRGB(0,0,0)
-			projectile.CFrame = CFrame.new(camera.CFrame.Position + direction * 5)
 			projectile.Anchored = false
 			projectile.CanCollide = true
+			projectile.CFrame = CFrame.new(camera.CFrame.Position + direction * 5)
 			projectile.Parent = workspace
 
-			local bv = Instance.new("BodyVelocity")
-			bv.Velocity = direction * 150
-			bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-			bv.Parent = projectile
+			local bodyVelocity = Instance.new("BodyVelocity")
+			bodyVelocity.Velocity = direction * 150
+			bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+			bodyVelocity.Parent = projectile
 
 			task.delay(4, function()
-				if projectile then projectile:Destroy() end
+				if projectile and projectile.Parent then
+					projectile:Destroy()
+				end
 			end)
 
 			local touched = false
-			projectile.Touched:Connect(function()
+			projectile.Touched:Connect(function(hit)
 				if touched then return end
 				touched = true
 
@@ -998,6 +984,29 @@ ToolTab:AddButton({
 				explosion.BlastPressure = blastPressure
 				explosion.DestroyJointRadiusPercent = 0
 				explosion.Parent = workspace
+
+				explosion.Hit:Connect(function(part)
+					local char = part:FindFirstAncestorOfClass("Model")
+					local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+					if humanoid and char ~= player.Character then
+						humanoid.Health = 0
+						for _,p in pairs(char:GetDescendants()) do
+							if p:IsA("BasePart") then
+								p.Anchored = false
+								p.Velocity = Vector3.new(math.random(-150,150), math.random(150,250), math.random(-150,150))
+								local fadeTween = TweenService:Create(p, TweenInfo.new(2), {
+									Transparency = 1
+								})
+								fadeTween:Play()
+							end
+						end
+						task.delay(1, function()
+							if char then
+								char:Destroy()
+							end
+						end)
+					end
+				end)
 
 				projectile:Destroy()
 			end)
